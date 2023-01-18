@@ -1,0 +1,51 @@
+INITIAL CONDITIONS:
+1) the application needs:
+    - 2 servers
+    - 12 cores
+    - 9 MB of memory
+    - 12 MB of storage
+
+2) the conditions are the following on the servers:
+    - cores can be allocated only 4 by 4
+    - memory can only be allocated by chunks of 2 MB
+
+
+REQUEST:
+
+POST /servers/allocation HTTP/1.1
+Host: rm.com
+Accept: application/json
+Content-Type: application/json
+Content-Length: <req_length>
+{
+    "servers": 2,
+    "cores": 12,
+    "msize": 9,
+    "ssize": 12
+}
+
+
+RESPONSE:
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: <resp_length>
+{
+    "id": 234,
+    "servers": 2,
+    "properties": [
+        {
+            "name": "server0",
+            "cores": 8,
+            "core_list": [4, 5, 6, 7, 12, 13, 14, 15],
+            "msize": 4,
+            "ssize": 6
+        }, {
+            "name": "server3",
+            "cores": 8,
+            "core_list": [0, 1, 2, 3, 4, 5, 6, 7],
+            "msize": 6,
+            "ssize": 6
+        }
+    ]
+}
