@@ -10,11 +10,16 @@ class ResourceManager:
     def allocRequest(self, servers, cores, msize, ssize):
         print("allocRequest:" + str(servers) + "  " + str(cores) + "  " + str(msize) + "  " + str(ssize))
         self.id += 1
-        iallocId = self.id
-        self.idMap[id] = "Up"
-        res = self.getRetJSON(iallocId, servers)
+        allocId = self.id
+        self.idMap[allocId] = "Up"
+        res = self.getRetJSON(allocId, servers)
         return res
-    
+        
+    def deleteSession(self, allocId):
+        print("deleteSession:" + str(allocId))
+        self.idMap.pop(allocId)
+        return
+        
     def getRetJSON(self, allocId, servers):
         retProperties = []
         
@@ -30,4 +35,11 @@ class ResourceManager:
         retId = allocId
         retServers = servers
         return {"id": retId, "servers": servers, "properties": retProperties}
+        
+    def getSessions(self):
+        retSessions = []
+        for x in self.idMap:
+            retSessions.append(str(x))
+        return retSessions
+
     

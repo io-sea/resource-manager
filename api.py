@@ -1,5 +1,7 @@
+import json
 from flask import Flask, jsonify
 from flask_restx import Resource, Api, reqparse
+from flask_restx import fields, marshal
 from RM import ResourceManager
 
 app = Flask(__name__)
@@ -21,7 +23,6 @@ resourceManager = ResourceManager();
 class Allocation(Resource):  
     def post(self):
         global resourceManager
-        resourceManager.control()
         
         args = parser.parse_args()
         servers = args['servers']
@@ -31,19 +32,26 @@ class Allocation(Resource):
         
         print("Req:" + str(servers) + "  " + str(cores) + "  " + str(msize) + "  " + str(ssize))
 
-        return resourceManager.allocRequest(servers, cores, msize, ssize)
+        return resourceManager.allocRequest(servers, cores, msize, ssize), 201
         
-@api.route('/delete')
-class Delete(Resource):
-    def delete(self):
 
+@api.route('/delete/<int:delete_id>')
+class Delete(Resource):
+    def delete(self, delete_id):
+        resourceManager.deleteSession(delete_id)
         return {}, 200
  
 @api.route('/sessions')
 class Sessions(Resource):
     def get(self):
+        sessions = resourceManager.getSessions()
+        sessions_fields = {'sessions_up': fields.List(fields.String)}
 
-        return {'sessions': 'up'}
+        data = {'sessions_up' : sessions}
+        json.dumps(marshal(data, sessions_fields))
+        
+        return (marshal(data, sessions_fields))
+
 
 if __name__ == '__main__':
     app.run(debug=True)
