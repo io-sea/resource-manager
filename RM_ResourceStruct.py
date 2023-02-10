@@ -58,6 +58,22 @@ class RM_ResourceStruct:
                 if escapeWhile == True:
                     break
         return
+
+    def getTotalFreeSpace(self):
+        self.clearSpace()
+        totalFreeSpace = 0
+        for structItem in self.listOfItems:
+            if structItem.isFree == True:
+                totalFreeSpace = totalFreeSpace + structItem.size
+        return totalFreeSpace
+
+    def getMaxChunkOfFreeSpace(self):
+        self.clearSpace()
+        maxChunk = 0
+        for structItem in self.listOfItems:
+            if structItem.isFree == True and structItem.size > maxChunk:
+                maxChunk = structItem.size
+        return maxChunk
         
     def printListOfItems(self):
         print("\nStruct:")
