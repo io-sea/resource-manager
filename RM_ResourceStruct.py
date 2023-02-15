@@ -5,22 +5,22 @@ def sortGetIndex(item):
         return item.getIndexFrom()
 
 class RM_ResourceStruct:  
-    def __init__(self, totalSize, minChunk):
+    def __init__(self, totalSize, minChunk, id):
         print("RM_ResourceStruct created")
         self.totalSize = totalSize
         self.minChunk = minChunk
-        initItem = ResourceStruct_item(True, datetime.now(), datetime.now(), 0, totalSize, 0)
+        initItem = ResourceStruct_item(True, datetime.now(), 0, totalSize, 0)
         self.listOfItems = [initItem]
-        self.actualTimeTest = 0
+        self.id = id
 
-    def addItemToStruct(self, fromTime, toTime, size, ownerID):
-        self.clearSpace()
+    def addItemToStruct(self, size, ownerID):
+        fromTime = self.getActualTime();
         if size < self.minChunk:
             size = self.minChunk
 
         for structItem in self.listOfItems:
             if structItem.isFree == True and structItem.size >= size:   
-                newItem = ResourceStruct_item(False, fromTime, toTime, structItem.indexFrom, size, ownerID)
+                newItem = ResourceStruct_item(False, fromTime, structItem.indexFrom, size, ownerID)
                 structItem.setIndexFrom((structItem.indexFrom + size))
                 structItem.setSize((structItem.size - size))
                 self.listOfItems.append(newItem)
@@ -33,34 +33,33 @@ class RM_ResourceStruct:
         now = datetime.now()
         return now
 
-    def clearSpace(self):
-        actualTime = self.getActualTime()
-        print("ClearSpace at:" + str(actualTime))
-        newSpace = False
+    def deleteItemFromStruct(self, ownerID):
+        removeThisItems = []
+        retValue = -1 
         for index in range(len(self.listOfItems)):
-            if self.listOfItems[index].toTime < actualTime and self.listOfItems[index].isFree == False:
+            if self.listOfItems[index].ownerID == ownerID:
                 self.listOfItems[index].isFree = True
-                self.listOfItems[index].ownerID = datetime.now()
-                self.listOfItems[index].fromTime = datetime.now()
-                self.listOfItems[index].toTime = datetime.now()
-                newSpace = True
+                self.listOfItems[index].fromTime = self.getActualTime();
+                self.listOfItems[index].ownerID = 0
+                retValue = 0
 
-        if newSpace == True:
-            while True: #needed for update of "self.listOfItems.count"
-                escapeWhile = True
-                for index in range(len(self.listOfItems) - 1):
-                    if self.listOfItems[index].isFree == True and self.listOfItems[index + 1].isFree == True:
-                        escapeWhile = False
+                if index < (len(self.listOfItems) - 1):
+                    if self.listOfItems[index + 1].isFree == True: #the neighbour on the right is free
                         self.listOfItems[index].setSize((self.listOfItems[index].size + self.listOfItems[index + 1].size))
-                        self.listOfItems.pop(index + 1)
-                        break
+                        removeThisItems.append(index + 1)
 
-                if escapeWhile == True:
-                    break
-        return
+                if index > 0:
+                    if self.listOfItems[index - 1].isFree == True: #the neighbour on the left is free
+                        self.listOfItems[index - 1].setSize((self.listOfItems[index].size + self.listOfItems[index - 1].size))
+                        self.listOfItems[index - 1].fromTime = self.getActualTime();
+                        removeThisItems.append(index)
+
+        for index in removeThisItems:
+            self.listOfItems.pop(index)
+
+        return retValue
 
     def getTotalFreeSpace(self):
-        self.clearSpace()
         totalFreeSpace = 0
         for structItem in self.listOfItems:
             if structItem.isFree == True:
@@ -68,7 +67,6 @@ class RM_ResourceStruct:
         return totalFreeSpace
 
     def getMaxChunkOfFreeSpace(self):
-        self.clearSpace()
         maxChunk = 0
         for structItem in self.listOfItems:
             if structItem.isFree == True and structItem.size > maxChunk:
@@ -81,7 +79,6 @@ class RM_ResourceStruct:
             print("  Item")
             print("    isFree: " + str(x.isFree))
             print("    fromTime: " + str(x.fromTime))
-            print("    toTime: " + str(x.toTime))
             print("    indexFrom: " + str(x.indexFrom))
             print("    size: " + str(x.size))
             print("    ownerID: " + str(x.ownerID))

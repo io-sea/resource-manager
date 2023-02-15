@@ -1,9 +1,8 @@
 class ResourceStruct_item:  
-    def __init__(self, isFree, fromTime, toTime, indexFrom, size, ownerID):
+    def __init__(self, isFree, fromTime, indexFrom, size, ownerID):
         print("RM item created")
         self.isFree = isFree
         self.fromTime = fromTime
-        self.toTime = toTime
         self.indexFrom = indexFrom
         self.size = size
         self.ownerID = ownerID
