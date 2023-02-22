@@ -2,7 +2,7 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy import text
 from sqlalchemy import MetaData, insert, select, update
-from sqlalchemy import Table, Column, Integer, String, Boolean
+from sqlalchemy import Table, Column, Integer, String, Boolean, DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase
 from typing import List
@@ -11,6 +11,10 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy import func
+
+from datetime import datetime
+import time
+
 
 engine = create_engine("mysql://root:heslo@localhost/test")
 
@@ -55,9 +59,11 @@ class GroupAllocation(Base):
     __tablename__ = "group_allocation"
     id: Mapped[int] = mapped_column(primary_key=True)
     valid: Mapped[bool] = mapped_column(nullable=False)
+    time_of_allocation: Mapped[datetime] = mapped_column(nullable=False)
+    time_of_deallocation: Mapped[datetime] = mapped_column(nullable=True)
     allocation: Mapped[List["Allocation"]] = relationship(back_populates="group_allocation")
     def __repr__(self) -> str:
-        return f"User(id={self.id!r}, valid={valid.size!r})"
+        return f"User(id={self.id!r}, valid={self.valid!r}, time_of_allocation={self.time_of_allocation!r}, time_of_deallocation={self.time_of_deallocation!r})"
 
 class Allocation(Base):
     __tablename__ = "allocation"
@@ -93,17 +99,37 @@ def init(engine):
         result = conn.execute(stmt)
         stmt = insert(Resource).values(id=4, server_id=2, resource_type_id=2, max_size=1000, free_space = 1000, min_chunk=100)
         result = conn.execute(stmt)
-        stmt = insert(GroupAllocation).values(id=1, valid=True)
+        stmt = insert(GroupAllocation).values(id=1, valid=True, time_of_allocation=func.now())
         result = conn.execute(stmt)
 
         conn.commit()
 
 def run(engine):
     with engine.connect() as conn:
-        result = conn.execute(stmt)
-        for row in conn.execute(select(Allocation)):
-            print(row)
+        #stmt = select(func.now())
+        #res = conn.execute(stmt)
+        #print(res.all())
+        #for row in conn.execute(select(Allocation)):
+            #print(row)
+        free_servers = findFreeServers(conn, 2, 50, 100)
+        print(free_servers)
         conn.commit()
+
+def makeAllocation(engine, server_count, RAM_size, disk_size):
+    with engine.connect() as conn:
+        free_servers = findFreeServers(conn, server_count, RAM_size, disk_size);
+        if(free_servers[0] == -1):
+            return -1;
+
+        group_alloc_row = conn.execute(select(GroupAllocation).order_by(GroupAllocation.id.desc())).first()
+        group_alloc_id_new = group_alloc_row.id + 1
+        conn.execute(insert(GroupAllocation).values(id=group_alloc_id_new, valid=True, time_of_allocation=func.now()))
+
+        for server_id in free_servers:
+            addAllocToServer(conn, server_id, RAM_size, disk_size, group_alloc_id_new)
+
+        conn.commit()
+        return group_alloc_id_new;
 
 def addAllocItem(conn, resource_id, size, group_alloc_id):
     stmt = insert(Allocation).values(resource_id=resource_id, size=size, group_allocation_id=group_alloc_id)
@@ -113,24 +139,23 @@ def addAllocItem(conn, resource_id, size, group_alloc_id):
     stmt = update(Resource).values(free_space=free_space_actual).where(Resource.id == resource_id)
     result = conn.execute(stmt)
 
-def addAllocToServer(conn, server_id, RAM_size, disk_size):
+def addAllocToServer(conn, server_id, RAM_size, disk_size, group_alloc_id):
     #RAM_id = 1, disk_id = 2, CPU_ID = 3
-    group_alloc_row = conn.execute(select(GroupAllocation).order_by(GroupAllocation.id.desc())).first()
-    group_alloc_id_new = group_alloc_row.id + 1
+    #group_alloc_row = conn.execute(select(GroupAllocation).order_by(GroupAllocation.id.desc())).first()
+    #group_alloc_id_new = group_alloc_row.id + 1
 
-    stmt = insert(GroupAllocation).values(id=group_alloc_id_new, valid=True)
-    result = conn.execute(stmt)
+    #stmt = insert(GroupAllocation).values(id=group_alloc_id_new, valid=True, time_of_allocation=func.now())
+    #result = conn.execute(stmt)
 
     RAM_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 1)).first()
     if(RAM_size < RAM_row.min_chunk):
         RAM_size = RAM_row.min_chunk
-    addAllocItem(conn, RAM_row.id, RAM_size, group_alloc_id_new)
-
+    addAllocItem(conn, RAM_row.id, RAM_size, group_alloc_id)
 
     disk_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 2)).first()
     if(disk_size < disk_row.min_chunk):
         disk_size = disk_row.min_chunk
-    addAllocItem(conn, disk_row.id, disk_size, group_alloc_id_new)
+    addAllocItem(conn, disk_row.id, disk_size, group_alloc_id)
     
 
 def deallocItems(conn, group_alloc_id):
@@ -146,11 +171,47 @@ def deallocGroup(engine, group_alloc_id):
         group_alloc = conn.execute(select(GroupAllocation).where(GroupAllocation.id == group_alloc_id)).first()
         if group_alloc.valid == True:
             deallocItems(conn, group_alloc_id)
-            conn.execute(update(GroupAllocation).values(valid=False).where(GroupAllocation.id == group_alloc_id))
+            conn.execute(update(GroupAllocation).values(valid=False, time_of_deallocation=func.now()).where(GroupAllocation.id == group_alloc_id))
             conn.commit()
             return 0
         else:
             return -1
+
+def findFreeServers(conn, server_count, RAM_size, disk_size):
+    #RAM_id = 1, disk_id = 2, CPU_ID = 3
+    free_servers = []
+    count_of_found_servers = 0;
+    for row in conn.execute(select(Server)):
+        if(serverFreeSpaceRAM(conn, row.id, RAM_size) == True and serverFreeSpaceDisk(conn, row.id, disk_size)):
+            free_servers.append(row.id)
+            count_of_found_servers = count_of_found_servers + 1
+            if(count_of_found_servers == server_count):
+                return free_servers
+    free_servers = [-1]
+    return free_servers
+
+
+def serverFreeSpaceRAM(conn, server_id, RAM_size):
+    RAM_row = conn.execute(select(Resource).where(Resource.resource_type_id == 1).where(Resource.server_id == server_id)).first()
+    if(RAM_row == None):
+        return False
+    if(RAM_size < RAM_row.min_chunk):
+        RAM_size = RAM_row.min_chunk
+    if(RAM_size <= RAM_row.free_space):
+        return True
+    else:
+        return False
+
+def serverFreeSpaceDisk(conn, server_id, disk_size):
+    disk_row = conn.execute(select(Resource).where(Resource.resource_type_id == 2).where(Resource.server_id == server_id)).first()
+    if(disk_row == None):
+        return False
+    if(disk_size < disk_row.min_chunk):
+        disk_size = disk_row.min_chunk
+    if(disk_size <= disk_row.free_space):
+        return True
+    else:
+        return False
 
 def insertItems(engine):
     with engine.connect() as conn:
@@ -164,6 +225,8 @@ def insertItems(engine):
 #init(engine)
 
 #insertItems(engine)
-deallocGroup(engine, 2)
-deallocGroup(engine, 3)
+#deallocGroup(engine, 2)
+#deallocGroup(engine, 3)
 #run(engine)
+print(makeAllocation(engine, 2, 50, 100))
+deallocGroup(engine, 6)
