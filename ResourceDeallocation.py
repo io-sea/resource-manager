@@ -23,5 +23,13 @@ class ResourceDeallocation:
             else:
                 return -1
 
+    def deallocAllSpace(self, engine):
+        with engine.connect() as conn:
+            for row in  conn.execute(select(GroupAllocation).where(GroupAllocation.valid == True)):
+                self.deallocItems(conn, row.id)
+                conn.execute(update(GroupAllocation).values(valid=False, time_of_deallocation=func.now()).where(GroupAllocation.id == row.id))
+            conn.commit()
+
+
 
 

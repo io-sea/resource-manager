@@ -57,8 +57,18 @@ class Allocation(Base):
     resource: Mapped[Resource] = relationship(back_populates="allocation")
     group_allocation_id = mapped_column(ForeignKey("group_allocation.id"))
     group_allocation: Mapped[GroupAllocation] = relationship(back_populates="allocation")
+    core: Mapped[List["Core"]] = relationship(back_populates="allocation")
     def __repr__(self) -> str:
-        return f"User(id={self.id!r}, size={self.size!r}, resource_id={self.resource_id!r}, group_allocation_id={self.group_allocation_id!r})"
+        return f"User(id={self.id!r}, size={self.size!r}, resource_id={self.resource_id!r}, group_allocation_id={self.group_allocation_id!r}, core={self.core!r})"
+
+class Core(Base):
+    __tablename__ = "core"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    index: Mapped[int] = mapped_column(nullable=False)
+    alloc_id = mapped_column(ForeignKey("allocation.id"))
+    allocation: Mapped[Allocation] = relationship(back_populates="core")
+    def __repr__(self) -> str:
+        return f"User(id={self.id!r}, index={self.index!r}, alloc_id={self.alloc_id!r})"
 
 def makeTables(engine):
     Base.metadata.create_all(engine)

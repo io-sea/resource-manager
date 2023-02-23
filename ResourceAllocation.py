@@ -4,47 +4,56 @@ class ResourceAllocation:
     def __init__(self):
         print("Alloc_class created")
 
-    def makeAllocation(self, engine, server_count, RAM_size, disk_size):
+    def makeAllocation(self, engine, server_count, RAM_size, disk_size, core_count):
         with engine.connect() as conn:
-            free_servers = self.findFreeServers(conn, server_count, RAM_size, disk_size);
+            free_servers = self.findFreeServers(conn, server_count, RAM_size, disk_size, core_count);
             if(free_servers[0] == -1):
                 return -1;
 
-            group_alloc_row = conn.execute(select(GroupAllocation).order_by(GroupAllocation.id.desc())).first()
-            group_alloc_id_new = group_alloc_row.id + 1
-            conn.execute(insert(GroupAllocation).values(id=group_alloc_id_new, valid=True, time_of_allocation=func.now()))
+            result = conn.execute(insert(GroupAllocation).values(valid=True, time_of_allocation=func.now()))
+            group_alloc_id_new = result.inserted_primary_key[0]
 
             for server_id in free_servers:
-                self.addAllocToServer(conn, server_id, RAM_size, disk_size, group_alloc_id_new)
+                self.addAllocToServer(conn, server_id, RAM_size, disk_size, core_count, group_alloc_id_new)
 
             conn.commit()
             return group_alloc_id_new;
 
-    def addAllocItem(self, conn, resource_id, size, group_alloc_id):
+    def addAllocItem(self, conn, resource_id, size, group_alloc_id, is_core_type, core_count):
         stmt = insert(Allocation).values(resource_id=resource_id, size=size, group_allocation_id=group_alloc_id)
         result = conn.execute(stmt)
+        allocation_id = result.inserted_primary_key[0]
         resource = conn.execute(select(Resource).where(Resource.id == resource_id)).first()
         free_space_actual = resource.free_space - size
         stmt = update(Resource).values(free_space=free_space_actual).where(Resource.id == resource_id)
         result = conn.execute(stmt)
+        if(is_core_type == True):
+            free_cores = self.findFreeCores(conn, resource_id, core_count)
+            for free_core in free_cores:
+                result = conn.execute(insert(Core).values(index=free_core, alloc_id=allocation_id))
 
-    def addAllocToServer(self, conn, server_id, RAM_size, disk_size, group_alloc_id):
+    def addAllocToServer(self, conn, server_id, RAM_size, disk_size, core_count, group_alloc_id):
         RAM_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 1)).first()
         if(RAM_size < RAM_row.min_chunk):
             RAM_size = RAM_row.min_chunk
-        self.addAllocItem(conn, RAM_row.id, RAM_size, group_alloc_id)
+        self.addAllocItem(conn, RAM_row.id, RAM_size, group_alloc_id, False, 0)
 
         disk_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 2)).first()
         if(disk_size < disk_row.min_chunk):
             disk_size = disk_row.min_chunk
-        self.addAllocItem(conn, disk_row.id, disk_size, group_alloc_id)
+        self.addAllocItem(conn, disk_row.id, disk_size, group_alloc_id, False, 0)
 
-    def findFreeServers(self, conn, server_count, RAM_size, disk_size):
+        CPU_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 3)).first()
+        if(core_count < CPU_row.min_chunk):
+            core_count = CPU_row.min_chunk
+        self.addAllocItem(conn, CPU_row.id, core_count, group_alloc_id, True, core_count)
+
+    def findFreeServers(self, conn, server_count, RAM_size, disk_size, core_count):
         #RAM_id = 1, disk_id = 2, CPU_ID = 3
         free_servers = []
         count_of_found_servers = 0;
         for row in conn.execute(select(Server)):
-            if(self.serverFreeSpaceRAM(conn, row.id, RAM_size) == True and self.serverFreeSpaceDisk(conn, row.id, disk_size)):
+            if(self.serverFreeSpaceResource(conn, row.id, RAM_size, 1) == True and self.serverFreeSpaceResource(conn, row.id, disk_size, 2) == True and self.serverFreeSpaceResource(conn, row.id, core_count, 3) == True):
                 free_servers.append(row.id)
                 count_of_found_servers = count_of_found_servers + 1
                 if(count_of_found_servers == server_count):
@@ -52,26 +61,31 @@ class ResourceAllocation:
         free_servers = [-1]
         return free_servers
 
-
-    def serverFreeSpaceRAM(self, conn, server_id, RAM_size):
-        RAM_row = conn.execute(select(Resource).where(Resource.resource_type_id == 1).where(Resource.server_id == server_id)).first()
-        if(RAM_row == None):
+    def serverFreeSpaceResource(self, conn, server_id, resource_size, resource_type_id):
+        resource_row = conn.execute(select(Resource).where(Resource.resource_type_id == resource_type_id).where(Resource.server_id == server_id)).first()
+        if(resource_row == None):
             return False
-        if(RAM_size < RAM_row.min_chunk):
-            RAM_size = RAM_row.min_chunk
-        if(RAM_size <= RAM_row.free_space):
+        if(resource_size < resource_row.min_chunk):
+            resource_size = resource_row.min_chunk
+        if(resource_size <= resource_row.free_space):
             return True
         else:
             return False
 
-    def serverFreeSpaceDisk(self, conn, server_id, disk_size):
-        disk_row = conn.execute(select(Resource).where(Resource.resource_type_id == 2).where(Resource.server_id == server_id)).first()
-        if(disk_row == None):
-            return False
-        if(disk_size < disk_row.min_chunk):
-            disk_size = disk_row.min_chunk
-        if(disk_size <= disk_row.free_space):
-            return True
-        else:
-            return False
+    def findFreeCores(self, conn, resource_id, core_count):  
+        CPU_row = conn.execute(select(Resource).where(Resource.id == resource_id)).first()
+        CPU_max_size = CPU_row.max_size
+        stmt = select(Resource, Core).where(Resource.id == resource_id).where(GroupAllocation.valid == True).join_from(Allocation, Resource).join_from(Allocation, GroupAllocation).join_from(Allocation, Core)
+        allocatedCores = []
+        freeCores = []
+        
+        for row in conn.execute(stmt):
+            allocatedCores.append(row.index)  
+        cores_added = 0
 
+        for i in range(CPU_max_size):
+            if(allocatedCores.count(i) == 0):
+                cores_added = cores_added + 1
+                freeCores.append(i)
+            if(cores_added == core_count):
+                return freeCores
