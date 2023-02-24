@@ -14,32 +14,45 @@ parser.add_argument('cores', type=int)
 parser.add_argument('msize', type=int)
 parser.add_argument('ssize', type=int)
 
-
 global resourceManager
 resourceManager = ResourceManager();
 
-
-@api.route('/allocation')
+@api.route('/v1.0.0/servers/allocation')
 class Allocation(Resource):  
     def post(self):
-        global resourceManager
+        try:
+            args = parser.parse_args()
+            servers = args['servers']
+            cores = args['cores']
+            msize = args['msize']
+            ssize = args['ssize']
         
-        args = parser.parse_args()
-        servers = args['servers']
-        cores = args['cores']
-        msize = args['msize']
-        ssize = args['ssize']
-        
-        print("Req:" + str(servers) + "  " + str(cores) + "  " + str(msize) + "  " + str(ssize))
+            #print("Req:" + str(servers) + "  " + str(cores) + "  " + str(msize) + "  " + str(ssize))
+            res = resourceManager.allocRequest(servers, cores, msize, ssize)
+            if(res == -1):
+                return {'Error - not enough space'}, 500
 
-        return resourceManager.allocRequest(servers, cores, msize, ssize), 201
-        
+            return res, 201
+        except:
+            return {'Error'}, 500
 
-@api.route('/delete/<int:delete_id>')
+@api.route('/v1.0.0/allocation/<int:delete_id>')
 class Delete(Resource):
     def delete(self, delete_id):
-        resourceManager.deleteSession(delete_id)
-        return {}, 200
+        try:
+            resourceManager.deleteSession(delete_id)
+            return {}, 200
+        except:
+            return {'Error'}, 500
+
+@api.route('/v1.0.0/allocation/delete/all/yes')
+class Delete(Resource):
+    def delete(self):
+        try:
+            resourceManager.deleteAllSessions()
+            return {}, 200
+        except:
+            return {'Error'}, 500
  
 @api.route('/sessions')
 class Sessions(Resource):
@@ -51,7 +64,6 @@ class Sessions(Resource):
         json.dumps(marshal(data, sessions_fields))
         
         return (marshal(data, sessions_fields))
-
 
 if __name__ == '__main__':
     app.run(debug=True)
