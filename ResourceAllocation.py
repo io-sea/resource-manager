@@ -132,7 +132,7 @@ class ResourceAllocation:
         retProperties = []
         
         for i in range(self.allocated_Server_count):
-            serverInfo = {"name": self.allocated_Server_Name[i], "cores": self.allocated_Core_count[i], "msize": self.allocated_RAM_size[i], "ssize": self.allocated_disk_size[i]}
+            serverInfo = {"name": self.allocated_Server_Name[i], "cores": self.allocated_Core_count[i], "core_list": self.allocated_Core_arr[i], "msize": self.allocated_RAM_size[i], "ssize": self.allocated_disk_size[i]}
             retProperties.append(serverInfo)
 
         return {"id": self.allocated_group_id, "servers": self.allocated_Server_count, "properties": retProperties}
