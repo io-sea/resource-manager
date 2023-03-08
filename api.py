@@ -30,11 +30,11 @@ class Allocation(Resource):
             #print("Req:" + str(servers) + "  " + str(cores) + "  " + str(msize) + "  " + str(ssize))
             res = resourceManager.allocRequest(servers, cores, msize, ssize)
             if(res == -1):
-                return {'Error - not enough space'}, 500
+                return {'message': 'Error - not enough space'}, 404
 
             return res, 201
         except:
-            return {'Error'}, 500
+            return {'message': 'Error'}, 500
 
 @api.route('/v1.0.0/allocation/<int:delete_id>')
 class Delete(Resource):
@@ -43,7 +43,7 @@ class Delete(Resource):
             resourceManager.deleteSession(delete_id)
             return {}, 200
         except:
-            return {'Error'}, 500
+            return {'message': 'Error'}, 500
 
 @api.route('/v1.0.0/allocation/delete/all/yes')
 class Delete(Resource):
@@ -52,19 +52,8 @@ class Delete(Resource):
             resourceManager.deleteAllSessions()
             return {}, 200
         except:
-            return {'Error'}, 500
- 
-@api.route('/sessions')
-class Sessions(Resource):
-    def get(self):
-        sessions = resourceManager.getSessions()
-        sessions_fields = {'sessions_up': fields.List(fields.String)}
-
-        data = {'sessions_up' : sessions}
-        json.dumps(marshal(data, sessions_fields))
-        
-        return (marshal(data, sessions_fields))
+            return {'message': 'Error'}, 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
     
