@@ -1,6 +1,6 @@
-from Tables import *
+from tables import *
 
-class ResourceAllocation:
+class resource_allocation:
     def __init__(self):
         print("Alloc_class created")
         self.allocated_group_id = -1

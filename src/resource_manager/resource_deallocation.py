@@ -1,6 +1,6 @@
-from Tables import *
+from tables import *
 
-class ResourceDeallocation:
+class resource_deallocation:
     def __init__(self):
         print("Dealloc_class created")
 

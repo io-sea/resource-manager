@@ -1,0 +1,29 @@
+# pyproject.toml
+
+[build-system]
+requires      = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "resource-manager"
+version = "1.0.0"
+description = "IO-SEA resource-manage component"
+readme = "README.md"
+authors = [{ name = "Jan Faltynek", email = "jan.faltynek@vsb.cz" }]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["IO-SEA", "data"]
+dependencies = [
+    "flask-restx",
+    "SQLAlchemy",
+	"PyMySQL",
+]
+requires-python = ">=3.9"
+
+[project.urls]
+Homepage = "https://code.it4i.cz/io-sea/resource-manager"
+
+[project.scripts]
+resource_manager = "resource_manager.__main__:main"

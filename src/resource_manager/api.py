@@ -2,9 +2,9 @@ import json
 from flask import Flask, jsonify
 from flask_restx import Resource, Api, reqparse
 from flask_restx import fields, marshal
-from RM import ResourceManager
+from resource_manager import resource_manager
 
-app = Flask(__name__)
+app = Flask('Resource Manager')
 api = Api(app)
 
 # Define parser and request args
@@ -15,7 +15,7 @@ parser.add_argument('msize', type=int)
 parser.add_argument('ssize', type=int)
 
 global resourceManager
-resourceManager = ResourceManager();
+resourceManager = resource_manager();
 
 @api.route('/v1.0.0/servers/allocation')
 class Allocation(Resource):  
@@ -54,6 +54,6 @@ class Delete(Resource):
         except:
             return {'message': 'Error'}, 500
 
-if __name__ == '__main__':
+def run_api():
     app.run(host="0.0.0.0", port=5000, debug=True)
     
