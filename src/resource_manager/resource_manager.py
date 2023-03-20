@@ -1,13 +1,13 @@
-from tables import *
-from resource_allocation import resource_allocation
-from resource_deallocation import resource_deallocation
+from .tables import *
+from .resource_allocation import resource_allocation
+from .resource_deallocation import resource_deallocation
 
 class resource_manager:  
     def __init__(self):
         print("RM created")
         self.res_alloc = resource_allocation()
         self.res_dealloc = resource_deallocation()
-        self.engine = create_engine("mysql://root:heslo@localhost/test")
+        self.engine = create_engine("mysql+pymysql://root:heslo@localhost/test")
         makeTables(self.engine)
         
     def control(self):

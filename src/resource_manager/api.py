@@ -2,7 +2,7 @@ import json
 from flask import Flask, jsonify
 from flask_restx import Resource, Api, reqparse
 from flask_restx import fields, marshal
-from resource_manager import resource_manager
+from .resource_manager import resource_manager
 
 app = Flask('Resource Manager')
 api = Api(app)
