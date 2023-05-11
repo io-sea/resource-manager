@@ -1,4 +1,4 @@
-from .tables import *
+from tables import *
 
 class resource_deallocation:
     def __init__(self):

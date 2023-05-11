@@ -45,9 +45,14 @@ class GroupAllocation(Base):
     valid: Mapped[bool] = mapped_column(nullable=False)
     time_of_allocation: Mapped[datetime] = mapped_column(nullable=False)
     time_of_deallocation: Mapped[datetime] = mapped_column(nullable=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    user: Mapped[str] = mapped_column(String(30), nullable=False)
+    user_slurm_token: Mapped[str] = mapped_column(String(60), nullable=False)
+    es_type: Mapped[str] = mapped_column(String(10), nullable=False)
+    allocation_status = mapped_column(String(20), nullable=False)
     allocation: Mapped[List["Allocation"]] = relationship(back_populates="group_allocation")
     def __repr__(self) -> str:
-        return f"User(id={self.id!r}, valid={self.valid!r}, time_of_allocation={self.time_of_allocation!r}, time_of_deallocation={self.time_of_deallocation!r})"
+        return f"User(id={self.id!r}, valid={self.valid!r}, time_of_allocation={self.time_of_allocation!r}, time_of_deallocation={self.time_of_deallocation!r}, name={self.name!r}, user={self.user!r}, user_slurm_token={self.user_slurm_token!r}, es_type={self.es_type!r}, allocation_status={self.allocation_status!r})"
 
 class Allocation(Base):
     __tablename__ = "allocation"

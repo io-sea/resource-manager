@@ -2,13 +2,17 @@ import json
 from flask import Flask, jsonify
 from flask_restx import Resource, Api, reqparse
 from flask_restx import fields, marshal
-from .resource_manager import resource_manager
+from resource_manager import resource_manager
 
 app = Flask('Resource Manager')
 api = Api(app)
 
 # Define parser and request args
 parser = reqparse.RequestParser()
+parser.add_argument('name', type=str)
+parser.add_argument('user', type=str)
+parser.add_argument('user_slurm_token', type=str)
+parser.add_argument('type', type=str)
 parser.add_argument('servers', type=int)
 parser.add_argument('cores', type=int)
 parser.add_argument('msize', type=int)
@@ -22,13 +26,17 @@ class Allocation(Resource):
     def post(self):
         try:
             args = parser.parse_args()
+            name = args['name']
+            user = args['user']
+            user_slurm_token = args['user_slurm_token']
+            es_type = args['type']
             servers = args['servers']
             cores = args['cores']
             msize = args['msize']
             ssize = args['ssize']
         
-            #print("Req:" + str(servers) + "  " + str(cores) + "  " + str(msize) + "  " + str(ssize))
-            res = resourceManager.allocRequest(servers, cores, msize, ssize)
+            print("Req:" + str(servers) + "  " + str(cores) + "  " + str(msize) + "  " + str(ssize))
+            res = resourceManager.allocRequest(name, user, user_slurm_token, es_type, servers, cores, msize, ssize)
             if(res == -1):
                 return {'message': 'Error - not enough space'}, 404
 

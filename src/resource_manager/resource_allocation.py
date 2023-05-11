@@ -1,9 +1,10 @@
-from .tables import *
+from tables import *
 
 class resource_allocation:
     def __init__(self):
         print("Alloc_class created")
         self.allocated_group_id = -1
+        self.allocated_user = ""
         self.allocated_Server_count = -1
         self.allocated_RAM_size = []
         self.allocated_disk_size = []
@@ -12,8 +13,9 @@ class resource_allocation:
         self.allocated_Server_Name = []
         self.correctUpload = False
 
-    def makeAllocation(self, engine, server_count, RAM_size, disk_size, core_count):
+    def makeAllocation(self, engine, name, user, user_slurm_token, es_type, server_count, RAM_size, disk_size, core_count):
         self.allocated_group_id = -1
+        self.allocated_user = user
         self.allocated_Server_count = -1
         self.allocated_RAM_size = []
         self.allocated_disk_size = []
@@ -27,7 +29,7 @@ class resource_allocation:
             if(free_servers[0] == -1):
                 return -1;
 
-            result = conn.execute(insert(GroupAllocation).values(valid=True, time_of_allocation=func.now()))
+            result = conn.execute(insert(GroupAllocation).values(name=name, user=user, user_slurm_token=user_slurm_token, es_type=es_type, valid=True, time_of_allocation=func.now(), allocation_status = "FREE"))
             group_alloc_id_new = result.inserted_primary_key[0]
             self.allocated_group_id = group_alloc_id_new
             self.allocated_Server_count = server_count
