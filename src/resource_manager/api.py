@@ -18,10 +18,12 @@ parser.add_argument('cores', type=int)
 parser.add_argument('msize', type=int)
 parser.add_argument('ssize', type=int)
 
+parser.add_argument("attributes", type=dict)
+
 global resourceManager
 resourceManager = resource_manager();
 
-@api.route('/v1.0.0/servers/allocation')
+@api.route('/v2.0.0/servers/allocation')
 class Allocation(Resource):  
     def post(self):
         try:
@@ -31,10 +33,20 @@ class Allocation(Resource):
             user_slurm_token = args['user_slurm_token']
             es_type = args['type']
             servers = args['servers']
-            cores = args['cores']
-            msize = args['msize']
-            ssize = args['ssize']
+            attributes = args['attributes']
+
+            cores = attributes['cores']
+            msize = attributes['msize']
+            ssize = attributes['ssize']
+
+        except:
+            return {'message': 'Error - Arguments parser'}, 500
+
+        if(name == None or user == None or user_slurm_token == None or es_type == None):
+            return {'message': 'Error - Missing argument'}, 500
         
+        try:
+            print("Req:" + str(name) + "  " + str(user) + "  " + str(es_type) + "  " + str(servers) + "  " + str(attributes))
             print("Req:" + str(servers) + "  " + str(cores) + "  " + str(msize) + "  " + str(ssize))
             res = resourceManager.allocRequest(name, user, user_slurm_token, es_type, servers, cores, msize, ssize)
             if(res == -1):
@@ -42,9 +54,9 @@ class Allocation(Resource):
 
             return res, 201
         except:
-            return {'message': 'Error'}, 500
+            return {'message': 'Error - AllocRequest'}, 500
 
-@api.route('/v1.0.0/allocation/<int:delete_id>')
+@api.route('/v2.0.0/allocation/<int:delete_id>')
 class Delete(Resource):
     def delete(self, delete_id):
         try:
@@ -53,7 +65,7 @@ class Delete(Resource):
         except:
             return {'message': 'Error'}, 500
 
-@api.route('/v1.0.0/allocation/delete/all/yes')
+@api.route('/v2.0.0/allocation/delete/all/yes')
 class Delete(Resource):
     def delete(self):
         try:
