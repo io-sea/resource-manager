@@ -65,6 +65,15 @@ class Delete(Resource):
         except:
             return {'message': 'Error'}, 500
 
+@api.route('/v2.0.0/server/allocation/<service_name>')
+class GetAllocation(Resource):
+    def get(self, service_name):
+        try:
+            res = resourceManager.getAssignedResource(service_name)
+            return res, 200
+        except:
+            return {'message': 'Error'}, 500
+
 @api.route('/v2.0.0/allocation/delete/all/yes')
 class Delete(Resource):
     def delete(self):
