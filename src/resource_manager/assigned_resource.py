@@ -9,8 +9,13 @@ class assigned_resource:
         with engine.connect() as conn:
             group_alloc_row = conn.execute(select(GroupAllocation).where(GroupAllocation.name == name).where(GroupAllocation.valid == True)).first()
             print(group_alloc_row)
+            if (group_alloc_row == None):
+                return -1
+            if (group_alloc_row.allocation_status == "ALLOCATED"):
+                return -2
+
+            group_alloc_row = conn.execute(select(GroupAllocation).where(GroupAllocation.name == name).where(GroupAllocation.valid == True)).first()
             group_alloc_id = group_alloc_row.id
-            print(group_alloc_id)
 
             assigned_servers_ids = []
             

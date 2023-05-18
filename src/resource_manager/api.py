@@ -70,9 +70,13 @@ class GetAllocation(Resource):
     def get(self, service_name):
         try:
             res = resourceManager.getAssignedResource(service_name)
+            if (res == -1):
+                return {'message': 'Allocation request failed because the reservation is missing'}, 500
+            if (res == -2):
+                return {'message': 'Allocation request failed because the reservation is ALLOCATED'}, 501
             return res, 200
         except:
-            return {'message': 'Error'}, 500
+            return {'message': 'Error'}, 502
 
 @api.route('/v2.0.0/allocation/delete/all/yes')
 class Delete(Resource):
