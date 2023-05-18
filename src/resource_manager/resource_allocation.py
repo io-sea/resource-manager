@@ -138,3 +138,18 @@ class resource_allocation:
             retProperties.append(serverInfo)
 
         return {"id": self.allocated_group_id, "servers": self.allocated_Server_count, "properties": retProperties}
+
+    def getFlavorSettings(self, engine, name):
+        with engine.connect() as conn:
+            flavor_row = conn.execute(select(Flavor).where(Flavor.name == name)).first()
+
+            if(flavor_row == None):
+                return -1
+
+            flavor_property = {
+                "name": name,
+                "cores": flavor_row.cores,
+                "msize": flavor_row.msize,
+                "ssize": flavor_row.ssize
+            }
+        return flavor_property

@@ -21,6 +21,12 @@ class resource_manager:
         res = self.res_alloc.getRetJSON();
         return res
 
+    def getFlavorProperty(self, name):
+        print("getFlavorProperty:" + str(name))
+        res = self.res_alloc.getFlavorSettings(self.engine, name);
+        print("res1: " + str(res))
+        return res
+
     def getAssignedResource(self, name):
         print("getAssignedResource:" + str(name))
         res = self.assigned_resource.getAssignedResource(self.engine, name)

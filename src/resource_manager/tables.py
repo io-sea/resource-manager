@@ -15,7 +15,7 @@ class Server(Base):
     name: Mapped[str] = mapped_column(String(30), nullable=False)
     resource: Mapped[List["Resource"]] = relationship(back_populates="server")
     def __repr__(self) -> str:
-        return f"User(id={self.id!r}, name={self.name!r})"
+        return f"Server(id={self.id!r}, name={self.name!r})"
 
 class ResourceType(Base):
     __tablename__ = "resource_type"
@@ -23,7 +23,7 @@ class ResourceType(Base):
     name: Mapped[str] = mapped_column(String(30), nullable=False)
     resource: Mapped[List["Resource"]] = relationship(back_populates="resource_type")
     def __repr__(self) -> str:
-        return f"User(id={self.id!r}, name={self.name!r})"
+        return f"ResourceType(id={self.id!r}, name={self.name!r})"
 
 class Resource(Base):
     __tablename__ = "resource"
@@ -37,7 +37,7 @@ class Resource(Base):
     resource_type: Mapped[ResourceType] = relationship(back_populates="resource")
     allocation: Mapped[List["Allocation"]] = relationship(back_populates="resource")
     def __repr__(self) -> str:
-        return f"Address(id={self.id!r}, max_size={self.max_size!r}, free_space={self.free_space!r}, min_chunk={self.min_chunk!r}, server_id={self.server_id!r}, resource_type_id={self.resource_type_id!r})"
+        return f"Resource(id={self.id!r}, max_size={self.max_size!r}, free_space={self.free_space!r}, min_chunk={self.min_chunk!r}, server_id={self.server_id!r}, resource_type_id={self.resource_type_id!r})"
 
 class GroupAllocation(Base):
     __tablename__ = "group_allocation"
@@ -52,7 +52,7 @@ class GroupAllocation(Base):
     allocation_status = mapped_column(String(20), nullable=False)
     allocation: Mapped[List["Allocation"]] = relationship(back_populates="group_allocation")
     def __repr__(self) -> str:
-        return f"User(id={self.id!r}, valid={self.valid!r}, time_of_allocation={self.time_of_allocation!r}, time_of_deallocation={self.time_of_deallocation!r}, name={self.name!r}, user={self.user!r}, user_slurm_token={self.user_slurm_token!r}, es_type={self.es_type!r}, allocation_status={self.allocation_status!r})"
+        return f"GroupAllocation(id={self.id!r}, valid={self.valid!r}, time_of_allocation={self.time_of_allocation!r}, time_of_deallocation={self.time_of_deallocation!r}, name={self.name!r}, user={self.user!r}, user_slurm_token={self.user_slurm_token!r}, es_type={self.es_type!r}, allocation_status={self.allocation_status!r})"
 
 class Allocation(Base):
     __tablename__ = "allocation"
@@ -64,7 +64,7 @@ class Allocation(Base):
     group_allocation: Mapped[GroupAllocation] = relationship(back_populates="allocation")
     core: Mapped[List["Core"]] = relationship(back_populates="allocation")
     def __repr__(self) -> str:
-        return f"User(id={self.id!r}, size={self.size!r}, resource_id={self.resource_id!r}, group_allocation_id={self.group_allocation_id!r}, core={self.core!r})"
+        return f"Allocation(id={self.id!r}, size={self.size!r}, resource_id={self.resource_id!r}, group_allocation_id={self.group_allocation_id!r}, core={self.core!r})"
 
 class Core(Base):
     __tablename__ = "core"
@@ -73,7 +73,17 @@ class Core(Base):
     alloc_id = mapped_column(ForeignKey("allocation.id"))
     allocation: Mapped[Allocation] = relationship(back_populates="core")
     def __repr__(self) -> str:
-        return f"User(id={self.id!r}, index={self.index!r}, alloc_id={self.alloc_id!r})"
+        return f"Core(id={self.id!r}, index={self.index!r}, alloc_id={self.alloc_id!r})"
+
+class Flavor(Base):
+    __tablename__ = "flavor"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    cores: Mapped[int] = mapped_column(nullable=False)
+    msize: Mapped[int] = mapped_column(nullable=False)
+    ssize: Mapped[int] = mapped_column(nullable=False)
+    def __repr__(self) -> str:
+        return f"Flavor(id={self.id!r}, name={self.name!r}, cores={self.cores!r}, msize={self.msize!r}, ssize={self.ssize!r})"
 
 def makeTables(engine):
     Base.metadata.create_all(engine)

@@ -14,10 +14,6 @@ parser.add_argument('user', type=str)
 parser.add_argument('user_slurm_token', type=str)
 parser.add_argument('type', type=str)
 parser.add_argument('servers', type=int)
-parser.add_argument('cores', type=int)
-parser.add_argument('msize', type=int)
-parser.add_argument('ssize', type=int)
-
 parser.add_argument("attributes", type=dict)
 
 global resourceManager
@@ -38,7 +34,10 @@ class Allocation(Resource):
             cores = attributes['cores']
             msize = attributes['msize']
             ssize = attributes['ssize']
-
+            try:
+                flavor = attributes['flavor']
+            except:
+                flavor = None
         except:
             return {'message': 'Error - Arguments parser'}, 500
 
@@ -48,6 +47,16 @@ class Allocation(Resource):
         try:
             print("Req:" + str(name) + "  " + str(user) + "  " + str(es_type) + "  " + str(servers) + "  " + str(attributes))
             print("Req:" + str(servers) + "  " + str(cores) + "  " + str(msize) + "  " + str(ssize))
+
+            if(flavor != None):
+                flavor_property = resourceManager.getFlavorProperty(flavor)
+                if(flavor_property == -1):
+                    return {'message': 'Error - Flavor does not exist'}, 500
+
+                cores = flavor_property['cores']
+                msize = flavor_property['msize']
+                ssize = flavor_property['ssize']
+
             res = resourceManager.allocRequest(name, user, user_slurm_token, es_type, servers, cores, msize, ssize)
             if(res == -1):
                 return {'message': 'Error - not enough space'}, 404
