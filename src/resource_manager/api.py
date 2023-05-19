@@ -19,7 +19,7 @@ parser.add_argument("attributes", type=dict)
 global resourceManager
 resourceManager = resource_manager();
 
-@api.route('/v2.0.0/servers/allocation')
+@api.route('/v2.0.0/ephemeralservice/reserve')
 class Allocation(Resource):  
     def post(self):
         try:
@@ -61,7 +61,7 @@ class Allocation(Resource):
             if(res == -1):
                 return {'message': 'Error - not enough space'}, 404
 
-            return res, 201
+            return {'name': res}, 200
         except:
             return {'message': 'Error - AllocRequest'}, 500
 

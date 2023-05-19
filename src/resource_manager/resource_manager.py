@@ -18,8 +18,7 @@ class resource_manager:
     def allocRequest(self, name, user, user_slurm_token, es_type, servers, cores, msize, ssize):
         print("allocRequest:" + str(name) + "  " + str(user) + "  " + str(user_slurm_token) + "  " + str(es_type) + "  " + str(servers) + "  " + str(cores) + "  " + str(msize) + "  " + str(ssize))
         self.res_alloc.makeAllocation(self.engine, name, user, user_slurm_token, es_type, servers, msize, ssize, cores)
-        res = self.res_alloc.getRetJSON();
-        return res
+        return name
 
     def getFlavorProperty(self, name):
         print("getFlavorProperty:" + str(name))

@@ -3,25 +3,11 @@ from tables import *
 class resource_allocation:
     def __init__(self):
         print("Alloc_class created")
-        self.allocated_group_id = -1
-        self.allocated_user = ""
-        self.allocated_Server_count = -1
-        self.allocated_RAM_size = []
-        self.allocated_disk_size = []
-        self.allocated_Core_count = []
         self.allocated_Core_arr = []
-        self.allocated_Server_Name = []
         self.correctUpload = False
 
     def makeAllocation(self, engine, name, user, user_slurm_token, es_type, server_count, RAM_size, disk_size, core_count):
-        self.allocated_group_id = -1
-        self.allocated_user = user
-        self.allocated_Server_count = -1
-        self.allocated_RAM_size = []
-        self.allocated_disk_size = []
-        self.allocated_Core_count = []
         self.allocated_Core_arr = []
-        self.allocated_Server_Name = []
         self.correctUpload = False
 
         with engine.connect() as conn:
@@ -31,17 +17,12 @@ class resource_allocation:
 
             result = conn.execute(insert(GroupAllocation).values(name=name, user=user, user_slurm_token=user_slurm_token, es_type=es_type, valid=True, time_of_allocation=func.now(), allocation_status = "FREE"))
             group_alloc_id_new = result.inserted_primary_key[0]
-            self.allocated_group_id = group_alloc_id_new
-            self.allocated_Server_count = server_count
 
             for server_id in free_servers:
                 self.addAllocToServer(conn, server_id, RAM_size, disk_size, core_count, group_alloc_id_new)
-                server_row = conn.execute(select(Server).where(Server.id == server_id)).first()
-                self.allocated_Server_Name.append(server_row.name)
 
             conn.commit()
             self.correctUpload = True
-            print(self.getRetJSON())
             return group_alloc_id_new;
 
     def addAllocItem(self, conn, resource_id, size, group_alloc_id, is_core_type, core_count):
@@ -63,19 +44,16 @@ class resource_allocation:
         if(RAM_size < RAM_row.min_chunk):
             RAM_size = RAM_row.min_chunk
         self.addAllocItem(conn, RAM_row.id, RAM_size, group_alloc_id, False, 0)
-        self.allocated_RAM_size.append(RAM_size)
 
         disk_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 2)).first()
         if(disk_size < disk_row.min_chunk):
             disk_size = disk_row.min_chunk
         self.addAllocItem(conn, disk_row.id, disk_size, group_alloc_id, False, 0)
-        self.allocated_disk_size.append(disk_size)
 
         CPU_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 3)).first()
         if(core_count < CPU_row.min_chunk):
             core_count = CPU_row.min_chunk
         self.addAllocItem(conn, CPU_row.id, core_count, group_alloc_id, True, core_count)
-        self.allocated_Core_count.append(core_count)
 
     def findFreeServers(self, conn, server_count, RAM_size, disk_size, core_count):
         #RAM_id = 1, disk_id = 2, CPU_ID = 3
@@ -118,26 +96,6 @@ class resource_allocation:
                 freeCores.append(i)
             if(cores_added == core_count):
                 return freeCores
-
-    def printResources(self):
-        print("GroupID:" + str(self.allocated_group_id))
-        print("  RAM:" + str(self.allocated_RAM_size))
-        print("  Disk:" + str(self.allocated_disk_size))
-        print("  Core Count:" + str(self.allocated_Core_count))
-        print("  Core Arr:" + str(self.allocated_Core_arr))
-        print("  Server Name:" + str(self.allocated_Server_Name) + "\n")
-
-    def getRetJSON(self):
-        if(self.correctUpload == False):
-            return -1
-
-        retProperties = []
-        
-        for i in range(self.allocated_Server_count):
-            serverInfo = {"name": self.allocated_Server_Name[i], "cores": self.allocated_Core_count[i], "core_list": self.allocated_Core_arr[i], "msize": self.allocated_RAM_size[i], "ssize": self.allocated_disk_size[i]}
-            retProperties.append(serverInfo)
-
-        return {"id": self.allocated_group_id, "servers": self.allocated_Server_count, "properties": retProperties}
 
     def getFlavorSettings(self, engine, name):
         with engine.connect() as conn:
