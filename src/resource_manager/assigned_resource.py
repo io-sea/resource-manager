@@ -5,7 +5,6 @@ class assigned_resource:
         print("assigned_resource created")
 
     def getAssignedResource(self, engine, name):
-        print("getAssignedResource -- Call")
         with engine.connect() as conn:
             group_alloc_row = conn.execute(select(GroupAllocation).where(GroupAllocation.name == name).where(GroupAllocation.valid == True)).first()
             print(group_alloc_row)

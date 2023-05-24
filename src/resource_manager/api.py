@@ -87,6 +87,23 @@ class GetAllocation(Resource):
         except:
             return {'message': 'Error'}, 502
 
+@api.route('/v2.0.0/server/resources/<server_name>')
+class GetServerResources(Resource):
+    def get(self, server_name):
+        #try:
+            if(server_name == 'all'):
+                res = resourceManager.getAllServersResource()
+                if (res == -1):
+                    return {'message': 'Server does not exist'}, 500
+                return res, 200
+            else:
+                res = resourceManager.getServerResource(server_name)
+                if (res == -1):
+                    return {'message': 'Server does not exist'}, 500
+                return res, 200
+        #except:
+            return {'message': 'Error'}, 501
+
 @api.route('/v2.0.0/allocation/delete/all/yes')
 class Delete(Resource):
     def delete(self):
