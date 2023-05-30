@@ -83,13 +83,14 @@ class Allocation(Resource):
             print(str(ex))
             return {'message': 'Error - AllocRequest'}, 500
 
-@api.route('/v2.0.0/allocation/<int:delete_id>')
+@api.route('/v2.0.0/allocation/<delete_name>')
 class Delete(Resource):
-    def delete(self, delete_id):
+    def delete(self, delete_name):
         try:
-            resourceManager.deleteSession(delete_id)
+            resourceManager.deleteSession(delete_name)
             return {}, 200
-        except:
+        except Exception as ex:
+            print(str(ex))
             return {'message': 'Error'}, 500
 
 @api.route('/v2.0.0/server/allocation/<service_name>')

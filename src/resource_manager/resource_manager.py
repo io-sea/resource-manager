@@ -43,9 +43,9 @@ class resource_manager:
         res = self.server_resource.getAllServersResource(self.engine)
         return res
         
-    def deleteSession(self, groupAllocId):
-        print("deleteSession:" + str(groupAllocId))
-        res = self.res_dealloc.deallocGroup(self.engine, groupAllocId)
+    def deleteSession(self, delete_name):
+        print("deleteSession:" + str(delete_name))
+        res = self.res_dealloc.deallocGroup(self.engine, delete_name)
         return res
 
     def deleteAllSessions(self):

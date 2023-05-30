@@ -12,12 +12,12 @@ class resource_deallocation:
             stmt = update(Resource).values(free_space=free_space_actual).where(Resource.id == row.resource_id)
             result = conn.execute(stmt)
 
-    def deallocGroup(self, engine, group_alloc_id):
+    def deallocGroup(self, engine, delete_name):
         with engine.connect() as conn:
-            group_alloc = conn.execute(select(GroupAllocation).where(GroupAllocation.id == group_alloc_id)).first()
+            group_alloc = conn.execute(select(GroupAllocation).where(GroupAllocation.name == delete_name)).first()
             if group_alloc.valid == True:
-                self.deallocItems(conn, group_alloc_id)
-                conn.execute(update(GroupAllocation).values(valid=False, time_of_deallocation=func.now()).where(GroupAllocation.id == group_alloc_id))
+                self.deallocItems(conn, group_alloc.id)
+                conn.execute(update(GroupAllocation).values(valid=False, time_of_deallocation=func.now()).where(GroupAllocation.id == group_alloc.id))
                 conn.commit()
                 return 0
             else:
