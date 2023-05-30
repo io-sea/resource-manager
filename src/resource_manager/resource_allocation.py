@@ -6,7 +6,7 @@ class resource_allocation:
         self.allocated_Core_arr = []
         self.correctUpload = False
 
-    def makeAllocation(self, engine, name, user, user_slurm_token, es_type, server_count, RAM_size, disk_size, core_count):
+    def makeAllocation(self, engine, name, user, user_slurm_token, es_type, server_count, RAM_size, disk_size, core_count, targets, mountpoint, location):
         self.allocated_Core_arr = []
         self.correctUpload = False
 
@@ -15,8 +15,12 @@ class resource_allocation:
             if(free_servers[0] == -1):
                 return -1;
 
-            result = conn.execute(insert(GroupAllocation).values(name=name, user=user, user_slurm_token=user_slurm_token, es_type=es_type, valid=True, time_of_allocation=func.now(), allocation_status = "FREE"))
+            result = conn.execute(insert(GroupAllocation).values(name=name, user=user, user_slurm_token=user_slurm_token, es_type=es_type, valid=True, time_of_allocation=func.now(), allocation_status = "FREE", targets = targets, mountpoint = mountpoint))
             group_alloc_id_new = result.inserted_primary_key[0]
+
+            if(location != None):
+                for server_type in location:
+                    conn.execute(insert(Location).values(location=server_type, group_allocation_id=group_alloc_id_new))
 
             for server_id in free_servers:
                 self.addAllocToServer(conn, server_id, RAM_size, disk_size, core_count, group_alloc_id_new)

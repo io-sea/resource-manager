@@ -49,10 +49,13 @@ class GroupAllocation(Base):
     user: Mapped[str] = mapped_column(String(30), nullable=False)
     user_slurm_token: Mapped[str] = mapped_column(String(60), nullable=False)
     es_type: Mapped[str] = mapped_column(String(10), nullable=False)
+    targets: Mapped[str] = mapped_column(String(100), nullable=True)
+    mountpoint: Mapped[str] = mapped_column(String(100), nullable=True)
     allocation_status = mapped_column(String(20), nullable=False)
     allocation: Mapped[List["Allocation"]] = relationship(back_populates="group_allocation")
+    location: Mapped[List["Location"]] = relationship(back_populates="group_allocation")
     def __repr__(self) -> str:
-        return f"GroupAllocation(id={self.id!r}, valid={self.valid!r}, time_of_allocation={self.time_of_allocation!r}, time_of_deallocation={self.time_of_deallocation!r}, name={self.name!r}, user={self.user!r}, user_slurm_token={self.user_slurm_token!r}, es_type={self.es_type!r}, allocation_status={self.allocation_status!r})"
+        return f"GroupAllocation(id={self.id!r}, valid={self.valid!r}, time_of_allocation={self.time_of_allocation!r}, time_of_deallocation={self.time_of_deallocation!r}, name={self.name!r}, user={self.user!r}, user_slurm_token={self.user_slurm_token!r}, es_type={self.es_type!r}, targets={self.targets!r}, mountpoint={self.mountpoint!r}, allocation_status={self.allocation_status!r})"
 
 class Allocation(Base):
     __tablename__ = "allocation"
@@ -64,7 +67,7 @@ class Allocation(Base):
     group_allocation: Mapped[GroupAllocation] = relationship(back_populates="allocation")
     core: Mapped[List["Core"]] = relationship(back_populates="allocation")
     def __repr__(self) -> str:
-        return f"Allocation(id={self.id!r}, size={self.size!r}, resource_id={self.resource_id!r}, group_allocation_id={self.group_allocation_id!r}, core={self.core!r})"
+        return f"Allocation(id={self.id!r}, size={self.size!r}, resource_id={self.resource_id!r}, group_allocation_id={self.group_allocation_id!r})"
 
 class Core(Base):
     __tablename__ = "core"
@@ -74,6 +77,15 @@ class Core(Base):
     allocation: Mapped[Allocation] = relationship(back_populates="core")
     def __repr__(self) -> str:
         return f"Core(id={self.id!r}, index={self.index!r}, alloc_id={self.alloc_id!r})"
+
+class Location(Base):
+    __tablename__ = "location"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    location: Mapped[str] = mapped_column(String(50), nullable=False)
+    group_allocation_id = mapped_column(ForeignKey("group_allocation.id"))
+    group_allocation: Mapped[GroupAllocation] = relationship(back_populates="location")
+    def __repr__(self) -> str:
+        return f"Core(id={self.id!r}, location={self.location!r}, group_allocation_id={self.group_allocation_id!r})"
 
 class Flavor(Base):
     __tablename__ = "flavor"

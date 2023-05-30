@@ -15,6 +15,7 @@ parser.add_argument('user_slurm_token', type=str)
 parser.add_argument('type', type=str)
 parser.add_argument('servers', type=int)
 parser.add_argument("attributes", type=dict)
+parser.add_argument("location", type=str, action='append')
 
 global resourceManager
 resourceManager = resource_manager();
@@ -34,15 +35,31 @@ class Allocation(Resource):
             cores = attributes['cores']
             msize = attributes['msize']
             ssize = attributes['ssize']
+            targets = mountpoint = location = None
+
             try:
                 flavor = attributes['flavor']
             except:
                 flavor = None
+            try:
+                targets = attributes['targets']
+            except:
+                targets = None
+            try:
+                mountpoint = attributes['mountpoint']
+            except:
+                mountpoint = None
+            try:
+                location = args['location']
+            except:
+                location = None
         except:
             return {'message': 'Error - Arguments parser'}, 500
 
         if(name == None or user == None or user_slurm_token == None or es_type == None):
             return {'message': 'Error - Missing argument'}, 500
+
+        print("location:" + str(location))
         
         try:
             print("Req:" + str(name) + "  " + str(user) + "  " + str(es_type) + "  " + str(servers) + "  " + str(attributes))
@@ -57,12 +74,13 @@ class Allocation(Resource):
                 msize = flavor_property['msize']
                 ssize = flavor_property['ssize']
 
-            res = resourceManager.allocRequest(name, user, user_slurm_token, es_type, servers, cores, msize, ssize)
+            res = resourceManager.allocRequest(name, user, user_slurm_token, es_type, servers, cores, msize, ssize, targets, mountpoint, location)
             if(res == -1):
                 return {'message': 'Error - not enough space'}, 404
 
             return {'name': res}, 200
-        except:
+        except Exception as ex:
+            print(str(ex))
             return {'message': 'Error - AllocRequest'}, 500
 
 @api.route('/v2.0.0/allocation/<int:delete_id>')
