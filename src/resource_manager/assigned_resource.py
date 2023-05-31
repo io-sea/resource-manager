@@ -60,5 +60,8 @@ class assigned_resource:
             }
 
             #print(server_allocation_respons)
+
+            conn.execute(update(GroupAllocation).values(allocation_status = 'ALLOCATED').where(GroupAllocation.id == group_alloc_id))
+            conn.commit()
             
             return server_allocation_respons

@@ -1,6 +1,6 @@
 import sqlalchemy
 from sqlalchemy import create_engine, MetaData, insert, select, update
-from sqlalchemy import Table, Column, Integer, String, Boolean, DateTime, text, ForeignKey, func
+from sqlalchemy import Table, Column, Integer, String, Boolean, DateTime, text, ForeignKey, func, bindparam
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from typing import List, Optional
 import time
@@ -51,7 +51,7 @@ class GroupAllocation(Base):
     es_type: Mapped[str] = mapped_column(String(10), nullable=False)
     targets: Mapped[str] = mapped_column(String(100), nullable=True)
     mountpoint: Mapped[str] = mapped_column(String(100), nullable=True)
-    allocation_status = mapped_column(String(20), nullable=False)
+    allocation_status: Mapped[str] = mapped_column(String(20), nullable=False)
     allocation: Mapped[List["Allocation"]] = relationship(back_populates="group_allocation")
     location: Mapped[List["Location"]] = relationship(back_populates="group_allocation")
     def __repr__(self) -> str:

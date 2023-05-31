@@ -103,7 +103,8 @@ class GetAllocation(Resource):
             if (res == -2):
                 return {'message': 'Allocation request failed because the reservation is ALLOCATED'}, 501
             return res, 200
-        except:
+        except Exception as ex:
+            print(str(ex))
             return {'message': 'Error'}, 502
 
 @api.route('/v2.0.0/server/resources/<server_name>')
