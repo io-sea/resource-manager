@@ -1,5 +1,5 @@
 import sqlalchemy
-from sqlalchemy import create_engine, MetaData, insert, select, update
+from sqlalchemy import create_engine, MetaData, insert, select, update, delete
 from sqlalchemy import Table, Column, Integer, String, Boolean, DateTime, text, ForeignKey, func, bindparam
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from typing import List, Optional
@@ -94,6 +94,23 @@ class Flavor(Base):
     cores: Mapped[int] = mapped_column(nullable=False)
     msize: Mapped[int] = mapped_column(nullable=False)
     ssize: Mapped[int] = mapped_column(nullable=False)
+    def __repr__(self) -> str:
+        return f"Flavor(id={self.id!r}, name={self.name!r}, cores={self.cores!r}, msize={self.msize!r}, ssize={self.ssize!r})"
+
+class Queue(Base):
+    __tablename__ = "queue"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    user: Mapped[str] = mapped_column(String(30), nullable=False)
+    user_slurm_token: Mapped[str] = mapped_column(String(60), nullable=False)
+    es_type: Mapped[str] = mapped_column(String(10), nullable=False)
+    server_count: Mapped[int] = mapped_column(nullable=False)
+    targets: Mapped[str] = mapped_column(String(100), nullable=True)
+    mountpoint: Mapped[str] = mapped_column(String(100), nullable=True)
+    cores: Mapped[int] = mapped_column(nullable=False)
+    msize: Mapped[int] = mapped_column(nullable=False)
+    ssize: Mapped[int] = mapped_column(nullable=False)
+    location: Mapped[str] = mapped_column(String(150), nullable=True)
     def __repr__(self) -> str:
         return f"Flavor(id={self.id!r}, name={self.name!r}, cores={self.cores!r}, msize={self.msize!r}, ssize={self.ssize!r})"
 

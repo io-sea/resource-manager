@@ -19,13 +19,12 @@ class resource_manager:
     
     def allocRequest(self, name, user, user_slurm_token, es_type, servers, cores, msize, ssize, targets, mountpoint, location):
         print("allocRequest:" + str(name) + "  " + str(user) + "  " + str(user_slurm_token) + "  " + str(es_type) + "  " + str(servers) + "  " + str(cores) + "  " + str(msize) + "  " + str(ssize) + "  " + str(targets) + "  " + str(mountpoint)+ "  " + str(location))
-        self.res_alloc.makeAllocation(self.engine, name, user, user_slurm_token, es_type, servers, msize, ssize, cores, targets, mountpoint, location)
-        return name
+        res = self.res_alloc.makeAllocation(self.engine, name, user, user_slurm_token, es_type, servers, msize, ssize, cores, targets, mountpoint, location, False)
+        return res
 
     def getFlavorProperty(self, name):
         print("getFlavorProperty:" + str(name))
         res = self.res_alloc.getFlavorSettings(self.engine, name);
-        print("res1: " + str(res))
         return res
 
     def getAssignedResource(self, name):
@@ -46,6 +45,7 @@ class resource_manager:
     def deleteSession(self, delete_name):
         print("deleteSession:" + str(delete_name))
         res = self.res_dealloc.deallocGroup(self.engine, delete_name)
+        update = self.res_alloc.updateQueue(self.engine)
         return res
 
     def deleteAllSessions(self):

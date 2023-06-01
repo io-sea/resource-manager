@@ -6,13 +6,17 @@ class resource_allocation:
         self.allocated_Core_arr = []
         self.correctUpload = False
 
-    def makeAllocation(self, engine, name, user, user_slurm_token, es_type, server_count, RAM_size, disk_size, core_count, targets, mountpoint, location):
+    def makeAllocation(self, engine, name, user, user_slurm_token, es_type, server_count, RAM_size, disk_size, core_count, targets, mountpoint, location, already_in_queue):
         self.allocated_Core_arr = []
         self.correctUpload = False
 
         with engine.connect() as conn:
             free_servers = self.findFreeServers(conn, server_count, RAM_size, disk_size, core_count);
-            if(free_servers[0] == -1):
+            if(free_servers[0] == -1 and already_in_queue == True):
+                return 1;
+
+            if((free_servers[0] == -1 or self.isQueueEmpty(conn) == False) and already_in_queue == False):
+                self.addToQueue(conn, name, user, user_slurm_token, es_type, server_count, RAM_size, disk_size, core_count, targets, mountpoint, location)
                 return -1;
 
             result = conn.execute(insert(GroupAllocation).values(name=name, user=user, user_slurm_token=user_slurm_token, es_type=es_type, valid=True, time_of_allocation=func.now(), allocation_status = "FREE", targets = targets, mountpoint = mountpoint))
@@ -25,9 +29,11 @@ class resource_allocation:
             for server_id in free_servers:
                 self.addAllocToServer(conn, server_id, RAM_size, disk_size, core_count, group_alloc_id_new)
 
+            if(already_in_queue == True):
+                conn.execute(delete(Queue).where(Queue.name == name))
             conn.commit()
             self.correctUpload = True
-            return group_alloc_id_new;
+            return name;
 
     def addAllocItem(self, conn, resource_id, size, group_alloc_id, is_core_type, core_count):
         stmt = insert(Allocation).values(resource_id=resource_id, size=size, group_allocation_id=group_alloc_id)
@@ -115,3 +121,35 @@ class resource_allocation:
                 "ssize": flavor_row.ssize
             }
         return flavor_property
+
+    def isQueueEmpty(self, conn):
+        queue_row = conn.execute(select(Queue)).first()
+        if(queue_row == None):
+            return True
+        else:
+            return False
+
+    def addToQueue(self, conn, name, user, user_slurm_token, es_type, server_count, RAM_size, disk_size, core_count, targets, mountpoint, location):
+        if(location != None):
+            location = str(location)
+        conn.execute(insert(Queue).values(name=name, user=user, user_slurm_token=user_slurm_token, es_type=es_type, server_count=server_count, targets=targets, mountpoint=mountpoint, cores=core_count, msize=RAM_size, ssize=disk_size, location=location))
+        conn.commit()
+        return
+
+    def updateQueue(self, engine):
+        queue_row = None
+        location_list = None
+        with engine.connect() as conn:
+            if(self.isQueueEmpty(conn) == True):
+                return 0
+            queue_row = conn.execute(select(Queue)).first()
+            location = queue_row.location
+            
+            if(location != None):
+                list = location.strip('][').split(', ')
+                location_list = []
+                for item in list:
+                    item = item.strip('\'\'')
+                    location_list.append(item)
+        self.makeAllocation(engine, queue_row.name, queue_row.user, queue_row.user_slurm_token, queue_row.es_type, queue_row.server_count, queue_row.msize, queue_row.ssize, queue_row.cores, queue_row.targets, queue_row.mountpoint, location_list, True)
+        return 0
