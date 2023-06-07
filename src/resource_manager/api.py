@@ -3,6 +3,7 @@ from flask import Flask, jsonify
 from flask_restx import Resource, Api, reqparse
 from flask_restx import fields, marshal
 from resource_manager import resource_manager
+from logger import *
 
 app = Flask('Resource Manager')
 api = Api(app)
@@ -23,6 +24,7 @@ resourceManager = resource_manager();
 @api.route('/v2.0.0/ephemeralservice/reserve')
 class Allocation(Resource):  
     def post(self):
+        name = None
         try:
             args = parser.parse_args()
             name = args['name']
@@ -54,20 +56,22 @@ class Allocation(Resource):
             except:
                 location = None
         except:
+            logger.info('Allocation call - Error - Arguments parser (%s)', name)
             return {'message': 'Error - Arguments parser'}, 500
 
         if(name == None or user == None or user_slurm_token == None or es_type == None):
+            logger.info('Allocation call - Error - Missing argument (%s)', name)
             return {'message': 'Error - Missing argument'}, 500
 
         print("location:" + str(location))
         
         try:
             print("Req:" + str(name) + "  " + str(user) + "  " + str(es_type) + "  " + str(servers) + "  " + str(attributes))
-            print("Req:" + str(servers) + "  " + str(cores) + "  " + str(msize) + "  " + str(ssize))
 
             if(flavor != None):
                 flavor_property = resourceManager.getFlavorProperty(flavor)
                 if(flavor_property == -1):
+                    logger.info('Allocation call - Error - Flavor {%s} does not exist (%s)', flavor, name)
                     return {'message': 'Error - Flavor does not exist'}, 500
 
                 cores = flavor_property['cores']
@@ -76,11 +80,14 @@ class Allocation(Resource):
 
             res = resourceManager.allocRequest(name, user, user_slurm_token, es_type, servers, cores, msize, ssize, targets, mountpoint, location)
             if(res == -1):
-                return {'message': 'Error - not enough space'}, 404
+                logger.info('Allocation call - Not enough space - added to Queue (%s)\n    Req: name:%s  user:%s  es_type:%s  servers:%s  attributes%s:', name, name, user, es_type, str(servers), str(attributes))
+                return {'message': 'Not enough space - added to Queue'}, 404
 
+            logger.info('Allocation call - Done (%s)\n    Req: name:%s  user:%s  es_type:%s  servers:%s  attributes:%s', name, user, es_type, str(servers), str(attributes))
             return {'name': res}, 200
         except Exception as ex:
             print(str(ex))
+            logger.info('Allocation call - Error - Exp: %s (%s)', str(ex), name)
             return {'message': 'Error - AllocRequest'}, 500
 
 @api.route('/v2.0.0/allocation/<delete_name>')
