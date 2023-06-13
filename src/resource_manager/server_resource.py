@@ -1,4 +1,4 @@
-from tables import *
+from .tables import *
 
 class server_resource:
     def __init__(self):

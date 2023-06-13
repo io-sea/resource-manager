@@ -1,8 +1,8 @@
-from tables import *
-from resource_allocation import resource_allocation
-from resource_deallocation import resource_deallocation
-from assigned_resource import assigned_resource
-from server_resource import server_resource
+from .tables import *
+from .resource_allocation import resource_allocation
+from .resource_deallocation import resource_deallocation
+from .assigned_resource import assigned_resource
+from .server_resource import server_resource
 
 class resource_manager:  
     def __init__(self):
