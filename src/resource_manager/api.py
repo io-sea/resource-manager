@@ -78,19 +78,20 @@ class Allocation(Resource):
                 msize = flavor_property['msize']
                 ssize = flavor_property['ssize']
 
+            rm_logger.info('Allocation call - Start (%s)\n       Req: name:%s  user:%s  es_type:%s  servers:%s  attributes:%s', name, name, user, es_type, str(servers), str(attributes))
             res = resourceManager.allocRequest(name, user, user_slurm_token, es_type, servers, cores, msize, ssize, targets, mountpoint, location)
             if(res == -1):
                 rm_logger.info('Allocation call - Not enough space - added to Queue (%s)\n       Req: name:%s  user:%s  es_type:%s  servers:%s  attributes:%s', name, name, user, es_type, str(servers), str(attributes))
                 return {'message': 'Not enough space - added to Queue'}, 404
 
-            rm_logger.info('Allocation call - Done (%s)\n       Req: name:%s  user:%s  es_type:%s  servers:%s  attributes:%s', name, name, user, es_type, str(servers), str(attributes))
+            rm_logger.info('Allocation call - Done (%s)', name)
             return {'name': res}, 200
         except Exception as ex:
             print(str(ex))
             rm_logger.info('Allocation call - Error - Exp: %s (%s)', str(ex), name)
             return {'message': 'Error - AllocRequest'}, 500
 
-@api.route('/v2.0.0/allocation/<delete_name>')
+@api.route('/v2.0.0/server/allocation/<delete_name>')
 class Delete(Resource):
     def delete(self, delete_name):
         try:

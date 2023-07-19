@@ -51,18 +51,30 @@ class resource_allocation:
 
     def addAllocToServer(self, conn, server_id, RAM_size, disk_size, core_count, group_alloc_id):
         RAM_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 1)).first()
-        if(RAM_size < RAM_row.min_chunk):
-            RAM_size = RAM_row.min_chunk
+        if(RAM_size <= 0):
+            RAM_size = 0
+        else:
+            control_size = RAM_size % RAM_row.min_chunk
+            if(control_size != 0):
+                RAM_size = RAM_size - control_size + RAM_row.min_chunk
         self.addAllocItem(conn, RAM_row.id, RAM_size, group_alloc_id, False, 0)
 
         disk_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 2)).first()
-        if(disk_size < disk_row.min_chunk):
-            disk_size = disk_row.min_chunk
+        if(disk_size <= 0):
+            disk_size = 0
+        else:
+            control_size = disk_size % disk_row.min_chunk
+            if(control_size != 0):
+                disk_size = disk_size - control_size + disk_row.min_chunk
         self.addAllocItem(conn, disk_row.id, disk_size, group_alloc_id, False, 0)
 
         CPU_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 3)).first()
-        if(core_count < CPU_row.min_chunk):
-            core_count = CPU_row.min_chunk
+        if(core_count <= 0):
+            core_count = 0
+        else:
+            control_size = core_count % CPU_row.min_chunk
+            if(control_size != 0):
+                core_count = core_count - control_size + CPU_row.min_chunk
         self.addAllocItem(conn, CPU_row.id, core_count, group_alloc_id, True, core_count)
 
     def findFreeServers(self, conn, server_count, RAM_size, disk_size, core_count):
