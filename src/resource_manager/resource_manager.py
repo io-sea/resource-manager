@@ -3,6 +3,7 @@ from resource_allocation import resource_allocation
 from resource_deallocation import resource_deallocation
 from assigned_resource import assigned_resource
 from server_resource import server_resource
+from init_db import init_db
 
 class resource_manager:  
     def __init__(self):
@@ -11,6 +12,7 @@ class resource_manager:
         self.res_dealloc = resource_deallocation()
         self.assigned_resource = assigned_resource()
         self.server_resource = server_resource()
+        self.init_db = init_db()
         self.engine = create_engine("mysql+pymysql://root:heslo@localhost/test")
         makeTables(self.engine)
         
@@ -52,6 +54,11 @@ class resource_manager:
         print("deleteAllSessions:")
         res = self.res_dealloc.deallocAllSpace(self.engine)
         return res
+
+    def initDB(self):
+        print("initDB:")
+        ret = self.init_db.init_all(self.engine)
+        return ret
         
     def getSessions(self):
         retSessions = []

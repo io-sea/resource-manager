@@ -139,7 +139,7 @@ class GetServerResources(Resource):
                     return {'message': 'Server does not exist'}, 500
                 rm_logger.info('GetServerResources call - Done (%s)', server_name)
                 return res, 200
-        except:
+        except Exception as ex:
             rm_logger.info('GetServerResources call - Error - Exp: %s (%s)', str(ex), server_name)
             return {'message': 'Error'}, 501
 
@@ -150,6 +150,18 @@ class Delete(Resource):
             resourceManager.deleteAllSessions()
             return {}, 200
         except:
+            return {'message': 'Error'}, 500
+
+@api.route('/v2.0.0/server/init_db')
+class InitDB(Resource):
+    def get(self):
+        try:
+            res = resourceManager.initDB()
+            if(res != 0):
+                return {'message': 'DB init problem - test'}, 200
+            return {'message': 'DB is ready'}, 200
+        except Exception as ex:
+            rm_logger.info('InitDB call - Error - Exp: %s', str(ex))
             return {'message': 'Error'}, 500
 
 def run_api():
