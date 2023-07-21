@@ -82,7 +82,15 @@ class Allocation(Resource):
             res = resourceManager.allocRequest(name, user, user_slurm_token, es_type, servers, cores, msize, ssize, targets, mountpoint, location)
             if(res == -1):
                 rm_logger.info('Allocation call - Not enough space - added to Queue (%s)\n       Req: name:%s  user:%s  es_type:%s  servers:%s  attributes:%s', name, name, user, es_type, str(servers), str(attributes))
-                return {'message': 'Not enough space - added to Queue'}, 404
+                return {'message': 'Not enough space - added to Queue'}, 200
+
+            if(res == 10):
+                rm_logger.info('Allocation call - Already in queue (%s)\n       Req: name:%s  user:%s  es_type:%s  servers:%s  attributes:%s', name, name, user, es_type, str(servers), str(attributes))
+                return {'message': 'Already in queue'}, 500
+
+            if(res == 11):
+                rm_logger.info('Allocation call - Reservation already done (%s)\n       Req: name:%s  user:%s  es_type:%s  servers:%s  attributes:%s', name, name, user, es_type, str(servers), str(attributes))
+                return {'message': 'Reservation already done'}, 500
 
             rm_logger.info('Allocation call - Done (%s)', name)
             return {'name': res}, 200
@@ -111,10 +119,12 @@ class GetAllocation(Resource):
             if (res == -1):
                 rm_logger.info('GetAllocation call - Allocation request failed because the reservation is missing (%s)', service_name)
                 return {'message': 'Allocation request failed because the reservation is missing'}, 500
-            if (res == -2):
-                rm_logger.info('GetAllocation call - Allocation request failed because the reservation is ALLOCATED (%s)', service_name)
-                return {'message': 'Allocation request failed because the reservation is ALLOCATED'}, 501
-            rm_logger.info('GetAllocation call - Done (%s)', service_name)
+            #if (res == -2):
+            #    rm_logger.info('GetAllocation call - Allocation request failed because the reservation is ALLOCATED (%s)', service_name)
+            #    return {'message': 'Allocation request failed because the reservation is ALLOCATED'}, 500
+            if (res == 409):
+                rm_logger.info('GetAllocation call - Reservation exists but no resources available yet - In Queue (%s)', service_name)
+                return {'message': 'Reservation exists but no resources available yet - In Queue'}, 409
             return res, 200
         except Exception as ex:
             print(str(ex))
@@ -141,7 +151,7 @@ class GetServerResources(Resource):
                 return res, 200
         except Exception as ex:
             rm_logger.info('GetServerResources call - Error - Exp: %s (%s)', str(ex), server_name)
-            return {'message': 'Error'}, 501
+            return {'message': 'Error'}, 500
 
 @api.route('/v2.0.0/allocation/delete/all/yes')
 class Delete(Resource):
