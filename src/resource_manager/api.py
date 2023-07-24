@@ -4,6 +4,7 @@ from flask_restx import Resource, Api, reqparse
 from flask_restx import fields, marshal
 from resource_manager import resource_manager
 from logger import *
+from settings import settings
 
 app = Flask('Resource Manager')
 api = Api(app)
@@ -19,7 +20,9 @@ parser.add_argument("attributes", type=dict)
 parser.add_argument("location", type=str, action='append')
 
 global resourceManager
-resourceManager = resource_manager();
+global sett
+resourceManager = resource_manager()
+sett = settings()
 
 @api.route('/v2.0.0/ephemeralservice/reserve')
 class Allocation(Resource):  
@@ -166,7 +169,7 @@ class Delete(Resource):
 class InitDB(Resource):
     def get(self):
         try:
-            res = resourceManager.initDB()
+            res = resourceManager.initDB(sett.getSettings())
             if(res != 0):
                 return {'message': 'DB init problem - test'}, 200
             return {'message': 'DB is ready'}, 200
@@ -175,5 +178,14 @@ class InitDB(Resource):
             return {'message': 'Error'}, 500
 
 def run_api():
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    print("Starting...")
+    ret = sett.loadConfig()
+    if(ret == -1):
+        rm_logger.info('loadConfig - Error - config.txt does not exist')
+        return -1
+    config = sett.getSettings()
+    rm_logger.info('loadConfig - [Key, Value] - ' + str(config))
+    sett.printSettings()
+    #app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host=sett.getDicValue("api_adress"), port= int(sett.getDicValue("api_port")), debug=True)
     

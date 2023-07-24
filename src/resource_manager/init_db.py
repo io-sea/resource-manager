@@ -5,17 +5,17 @@ class init_db:
     def __init__(self):
         print("Init_db created")
 
-    def init_all(self, engine):
-        ret = self.test(engine)
+    def init_all(self, engine, settings):
+        ret = self.test(engine, settings)
         if(ret != 0):
             return ret
 
         self.init_resource_type(engine)
-        self.init_servers(engine)
-        self.init_flavors(engine)
+        self.init_servers(engine, settings)
+        self.init_flavors(engine, settings)
         return 0
 
-    def test(self, engine):
+    def test(self, engine, settings):
         with engine.connect() as conn:
             res = conn.execute(select(ResourceType)).first()
 
@@ -25,7 +25,8 @@ class init_db:
                 return -1
 
             try:
-                file = open('servers_init.txt', 'r')
+                print(settings["path_to_servers_init"])
+                file = open(settings["path_to_servers_init"], 'r')
                 file.close()
             except:
                 print("Init_db call - Error - Readfile failed - servers_init.txt")
@@ -33,7 +34,8 @@ class init_db:
                 return -2
 
             try:
-                file = open('flavors_init.txt', 'r')
+                print(settings["path_to_flavors_init"])
+                file = open(settings["path_to_flavors_init"], 'r')
                 file.close()
             except:
                 print("Init_db call - Error - Readfile failed - flavors_init.txt")
@@ -51,10 +53,10 @@ class init_db:
             conn.commit()
             return 0
 
-    def init_servers(self, engine):
+    def init_servers(self, engine, settings):
         with engine.connect() as conn:
             lines = []
-            with open("servers_init.txt") as file:
+            with open(settings["path_to_servers_init"]) as file:
                 lines = [line.rstrip() for line in file]
             
             id = 1
@@ -86,10 +88,10 @@ class init_db:
             conn.commit()
             return 0
 
-    def init_flavors(self, engine):
+    def init_flavors(self, engine, settings):
         with engine.connect() as conn:
             lines = []
-            with open("flavors_init.txt") as file:
+            with open(settings["path_to_flavors_init"]) as file:
                 lines = [line.rstrip() for line in file]
 
             id = 1

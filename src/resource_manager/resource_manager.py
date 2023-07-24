@@ -4,6 +4,7 @@ from resource_deallocation import resource_deallocation
 from assigned_resource import assigned_resource
 from server_resource import server_resource
 from init_db import init_db
+from settings import settings
 
 class resource_manager:  
     def __init__(self):
@@ -13,7 +14,13 @@ class resource_manager:
         self.assigned_resource = assigned_resource()
         self.server_resource = server_resource()
         self.init_db = init_db()
-        self.engine = create_engine("mysql+pymysql://root:heslo@localhost/test")
+        self.sett = settings()
+        ret = self.sett.loadConfig()
+        if(ret == -1):
+            return
+        connect_string = "mysql+pymysql://" + self.sett.getDicValue("db_user") + ":" + self.sett.getDicValue("db_password") + "@" + self.sett.getDicValue("db_adress") + "/" + self.sett.getDicValue("db_schem")
+        #self.engine = create_engine("mysql+pymysql://root:heslo@localhost/test")
+        self.engine = create_engine(connect_string)
         makeTables(self.engine)
         
     def control(self):
@@ -55,9 +62,9 @@ class resource_manager:
         res = self.res_dealloc.deallocAllSpace(self.engine)
         return res
 
-    def initDB(self):
+    def initDB(self, settings):
         print("initDB:")
-        ret = self.init_db.init_all(self.engine)
+        ret = self.init_db.init_all(self.engine, settings)
         return ret
         
     def getSessions(self):
