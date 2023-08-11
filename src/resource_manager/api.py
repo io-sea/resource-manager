@@ -106,8 +106,14 @@ class Allocation(Resource):
 class Delete(Resource):
     def delete(self, delete_name):
         try:
-            resourceManager.deleteSession(delete_name)
-            rm_logger.info('Delete call - Done (%s)', delete_name)
+            ret = resourceManager.deleteSession(delete_name)
+            if(ret == 0):
+                rm_logger.info('Delete call - Done (%s)', delete_name)
+            if(ret == 1):
+                rm_logger.info('Delete call - Done - from Queue (%s)', delete_name)
+            if(ret == -1):
+                rm_logger.info('Delete call - Error - Reservation does not exist (%s)', delete_name)
+                return {'message': 'Error - Reservation does not exist'}, 500
             return {}, 200
         except Exception as ex:
             print(str(ex))
@@ -128,6 +134,8 @@ class GetAllocation(Resource):
             if (res == 409):
                 rm_logger.info('GetAllocation call - Reservation exists but no resources available yet - In Queue (%s)', service_name)
                 return {'message': 'Reservation exists but no resources available yet - In Queue'}, 409
+            
+            rm_logger.info('GetAllocation call - Done (%s)', service_name)
             return res, 200
         except Exception as ex:
             print(str(ex))

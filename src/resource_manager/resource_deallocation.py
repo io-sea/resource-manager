@@ -14,14 +14,24 @@ class resource_deallocation:
 
     def deallocGroup(self, engine, delete_name):
         with engine.connect() as conn:
-            group_alloc = conn.execute(select(GroupAllocation).where(GroupAllocation.name == delete_name)).first()
-            if group_alloc.valid == True:
+            group_alloc = conn.execute(select(GroupAllocation).where(GroupAllocation.name == delete_name).where(GroupAllocation.valid == True)).first()
+            if(group_alloc == None):
+                res = self.deallocFromQueue(conn, delete_name)
+                return res
+            else:
                 self.deallocItems(conn, group_alloc.id)
                 conn.execute(update(GroupAllocation).values(valid=False, time_of_deallocation=func.now()).where(GroupAllocation.id == group_alloc.id))
                 conn.commit()
                 return 0
-            else:
-                return -1
+
+    def deallocFromQueue(self, conn, delete_name):
+        queue_row = conn.execute(select(Queue).where(Queue.name == delete_name)).first()
+        if(queue_row == None):
+            return -1
+        else:
+            conn.execute(delete(Queue).where(Queue.id == queue_row.id))
+            conn.commit()
+            return 1;
 
     def deallocAllSpace(self, engine):
         with engine.connect() as conn:
