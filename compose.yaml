@@ -1,0 +1,20 @@
+name: Resource_Manager
+services:
+  mysql:
+    image: "mysql:latest"
+    environment:
+        - MYSQL_DATABASE=test
+        - MYSQL_ROOT_PASSWORD=db_heslo
+        - MYSQL_USER=user
+        - MYSQL_PASSWORD=db_heslo
+    ports:
+        - "3306:3306"
+  api:
+    build: .
+    ports:
+      - "8000:5000"
+    stdin_open: true 
+    tty: true
+    depends_on:
+      mysql:
+        condition: service_started

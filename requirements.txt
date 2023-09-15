@@ -1,0 +1,4 @@
+flask-restx
+SQLAlchemy
+PyMySQL
+cryptography

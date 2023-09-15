@@ -188,12 +188,30 @@ class InitDB(Resource):
 def run_api():
     print("Starting...")
     ret = sett.loadConfig()
+
     if(ret == -1):
+        print("loadConfig - Error - config.txt does not exist")
         rm_logger.info('loadConfig - Error - config.txt does not exist')
         return -1
+
     config = sett.getSettings()
     rm_logger.info('loadConfig - [Key, Value] - ' + str(config))
     sett.printSettings()
+
+    
+    try:
+        res = resourceManager.initDB(sett.getSettings())
+        if(res == -1):
+            print("DB Init already done")
+        if(res != 0 and res !=-1):
+            print('DB init problem - test')
+        print('DB is ready')
+    except Exception as ex:
+        rm_logger.info('InitDB call - Error - Exp: %s', str(ex))
+
     #app.run(host="0.0.0.0", port=5000, debug=True)
     app.run(host=sett.getDicValue("api_adress"), port= int(sett.getDicValue("api_port")), debug=True)
+
+    
+        
     
