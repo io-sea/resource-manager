@@ -18,7 +18,8 @@ class resource_manager:
         ret = self.sett.loadConfig()
         if(ret == -1):
             return
-        connect_string = "mysql+pymysql://" + self.sett.getDicValue("db_user") + ":" + self.sett.getDicValue("db_password") + "@" + self.sett.getDicValue("db_adress") + "/" + self.sett.getDicValue("db_schem")
+        connect_string = "mysql+pymysql://" + self.sett.getDicValue("db_user") + ":" + self.sett.getDicValue("db_password") + "@mysql/" + self.sett.getDicValue("db_schem")
+        #connect_string = "mysql+pymysql://" + self.sett.getDicValue("db_user") + ":" + self.sett.getDicValue("db_password") + "@" + self.sett.getDicValue("db_adress") + "/" + self.sett.getDicValue("db_schem")
         #self.engine = create_engine("mysql+pymysql://root:heslo@localhost/test")
         self.engine = create_engine(connect_string)
         makeTables(self.engine)

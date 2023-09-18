@@ -4,11 +4,13 @@ services:
     image: "mysql:latest"
     environment:
         - MYSQL_DATABASE=test
-        - MYSQL_ROOT_PASSWORD=db_heslo
+        - MYSQL_ROOT_PASSWORD=heslo
         - MYSQL_USER=user
-        - MYSQL_PASSWORD=db_heslo
+        - MYSQL_PASSWORD=heslo
     ports:
         - "3306:3306"
+    networks:
+        - rm_net
   api:
     build: .
     ports:
@@ -18,3 +20,9 @@ services:
     depends_on:
       mysql:
         condition: service_started
+    networks:
+        - rm_net
+        
+networks:
+  rm_net:
+    name: rm_net
