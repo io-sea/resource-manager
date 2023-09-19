@@ -6,7 +6,7 @@ class settings:
 
     def loadConfig(self):
         try:
-            with open("config.txt") as file:
+            with open("../../config.txt") as file:
                 temp = file.read().splitlines()
                 for line in temp:
                     name, var = line.partition(":")[::2]

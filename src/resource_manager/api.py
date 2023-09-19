@@ -210,8 +210,8 @@ def run_api():
         rm_logger.info('InitDB call - Error - Exp: %s', str(ex))
 
     #app.run(host="0.0.0.0", port=5000, debug=True)
-    app.run(host=sett.getDicValue("api_adress"), port= int(sett.getDicValue("api_port")), debug=True)
+    #app.run(host=sett.getDicValue("api_adress"), port= int(sett.getDicValue("api_port")), debug=True)
 
-    
+   
         
     

@@ -12,7 +12,8 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-CMD ["python3", "src/resource_manager/run.py"]
-#ENTRYPOINT ["python3", "src/resource_manager/run.py"]
+WORKDIR /RM/src/resource_manager
+
+CMD gunicorn  --worker-class gevent --workers 1 --bind 0.0.0.0:5000 run:app --max-requests 10000
 
 
