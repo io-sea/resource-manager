@@ -1,4 +1,4 @@
-from .api import *
+from api import *
     
 def run_resource_manager():
     run_api()
