@@ -1,0 +1,8 @@
+db_schem:test
+db_user:root
+db_password:heslo
+db_adress:192.168.118.70
+api_adress:0.0.0.0
+api_port:5000
+path_to_flavors_init:../../flavors_init.txt
+path_to_servers_init:../../servers_init.txt

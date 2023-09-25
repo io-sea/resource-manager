@@ -1,0 +1,6 @@
+flask-restx
+SQLAlchemy
+PyMySQL
+cryptography
+gunicorn
+gevent

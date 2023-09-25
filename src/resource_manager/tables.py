@@ -5,6 +5,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from typing import List, Optional
 import time
 from datetime import datetime
+from logger import *
 
 class Base(DeclarativeBase):
     pass
@@ -115,4 +116,17 @@ class Queue(Base):
         return f"Flavor(id={self.id!r}, name={self.name!r}, cores={self.cores!r}, msize={self.msize!r}, ssize={self.ssize!r})"
 
 def makeTables(engine):
-    Base.metadata.create_all(engine)
+    try:
+        Base.metadata.create_all(engine)
+    except:
+        rm_logger.info('SQL - Error - API cannot connect to SQL (five attempts left)')
+        print('SQL - Error - API cannot connect to SQL (five attempts left)')
+        for x in range(4):
+            time.sleep(20)
+            try:
+                Base.metadata.create_all(engine)
+                return
+            except:
+                print("SQL connetion try -- " + str(x))
+        rm_logger.info('SQL - Error - API cannot connect to SQL (all attempts exhausted)')
+        print('SQL - Error - API cannot connect to SQL (all attempts exhausted)')

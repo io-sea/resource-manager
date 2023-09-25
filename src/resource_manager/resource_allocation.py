@@ -11,13 +11,18 @@ class resource_allocation:
         self.correctUpload = False
 
         with engine.connect() as conn:
-            free_servers = self.findFreeServers(conn, server_count, RAM_size, disk_size, core_count);
+            if(already_in_queue == False):
+                res = self.isAlreadyReservated(engine, name)
+                if(res != 0):
+                    return res
+
+            free_servers = self.findFreeServers(conn, server_count, RAM_size, disk_size, core_count)
             if(free_servers[0] == -1 and already_in_queue == True):
-                return 1;
+                return 1
 
             if((free_servers[0] == -1 or self.isQueueEmpty(conn) == False) and already_in_queue == False):
                 self.addToQueue(conn, name, user, user_slurm_token, es_type, server_count, RAM_size, disk_size, core_count, targets, mountpoint, location)
-                return -1;
+                return -1
 
             result = conn.execute(insert(GroupAllocation).values(name=name, user=user, user_slurm_token=user_slurm_token, es_type=es_type, valid=True, time_of_allocation=func.now(), allocation_status = "FREE", targets = targets, mountpoint = mountpoint))
             group_alloc_id_new = result.inserted_primary_key[0]
@@ -33,7 +38,7 @@ class resource_allocation:
                 conn.execute(delete(Queue).where(Queue.name == name))
             conn.commit()
             self.correctUpload = True
-            return name;
+            return name
 
     def addAllocItem(self, conn, resource_id, size, group_alloc_id, is_core_type, core_count):
         stmt = insert(Allocation).values(resource_id=resource_id, size=size, group_allocation_id=group_alloc_id)
@@ -51,18 +56,30 @@ class resource_allocation:
 
     def addAllocToServer(self, conn, server_id, RAM_size, disk_size, core_count, group_alloc_id):
         RAM_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 1)).first()
-        if(RAM_size < RAM_row.min_chunk):
-            RAM_size = RAM_row.min_chunk
+        if(RAM_size <= 0):
+            RAM_size = 0
+        else:
+            control_size = RAM_size % RAM_row.min_chunk
+            if(control_size != 0):
+                RAM_size = RAM_size - control_size + RAM_row.min_chunk
         self.addAllocItem(conn, RAM_row.id, RAM_size, group_alloc_id, False, 0)
 
         disk_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 2)).first()
-        if(disk_size < disk_row.min_chunk):
-            disk_size = disk_row.min_chunk
+        if(disk_size <= 0):
+            disk_size = 0
+        else:
+            control_size = disk_size % disk_row.min_chunk
+            if(control_size != 0):
+                disk_size = disk_size - control_size + disk_row.min_chunk
         self.addAllocItem(conn, disk_row.id, disk_size, group_alloc_id, False, 0)
 
         CPU_row = conn.execute(select(Resource).where(Resource.server_id == server_id).where(Resource.resource_type_id == 3)).first()
-        if(core_count < CPU_row.min_chunk):
-            core_count = CPU_row.min_chunk
+        if(core_count <= 0):
+            core_count = 0
+        else:
+            control_size = core_count % CPU_row.min_chunk
+            if(control_size != 0):
+                core_count = core_count - control_size + CPU_row.min_chunk
         self.addAllocItem(conn, CPU_row.id, core_count, group_alloc_id, True, core_count)
 
     def findFreeServers(self, conn, server_count, RAM_size, disk_size, core_count):
@@ -151,5 +168,27 @@ class resource_allocation:
                 for item in list:
                     item = item.strip('\'\'')
                     location_list.append(item)
-        self.makeAllocation(engine, queue_row.name, queue_row.user, queue_row.user_slurm_token, queue_row.es_type, queue_row.server_count, queue_row.msize, queue_row.ssize, queue_row.cores, queue_row.targets, queue_row.mountpoint, location_list, True)
+        ret = self.makeAllocation(engine, queue_row.name, queue_row.user, queue_row.user_slurm_token, queue_row.es_type, queue_row.server_count, queue_row.msize, queue_row.ssize, queue_row.cores, queue_row.targets, queue_row.mountpoint, location_list, True)
+        if(ret == queue_row.name):
+            self.updateQueue(engine)
+        
         return 0
+
+    def isAlreadyInQueue(self, engine, name):
+        queue_row = None
+        with engine.connect() as conn:
+            queue_row = conn.execute(select(Queue).where(Queue.name == name)).first()
+            if(queue_row == None):
+                return False
+        return True
+
+    def isAlreadyReservated(self, engine, name):
+        ret = self.isAlreadyInQueue(engine, name)
+        if(ret == True):
+            return 10
+        with engine.connect() as conn:
+            queue_row = conn.execute(select(GroupAllocation).where(GroupAllocation.name == name).where(GroupAllocation.valid == True)).first()
+            if(queue_row == None):
+                return 0
+        
+        return 11

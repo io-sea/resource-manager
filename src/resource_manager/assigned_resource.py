@@ -6,12 +6,15 @@ class assigned_resource:
 
     def getAssignedResource(self, engine, name):
         with engine.connect() as conn:
+            if(self.isInQueue(engine, name) == True):
+                return 409
+
             group_alloc_row = conn.execute(select(GroupAllocation).where(GroupAllocation.name == name).where(GroupAllocation.valid == True)).first()
             print(group_alloc_row)
             if (group_alloc_row == None):
                 return -1
-            if (group_alloc_row.allocation_status == "ALLOCATED"):
-                return -2
+            #if (group_alloc_row.allocation_status == "ALLOCATED"):
+            #    return -2
 
             group_alloc_row = conn.execute(select(GroupAllocation).where(GroupAllocation.name == name).where(GroupAllocation.valid == True)).first()
             group_alloc_id = group_alloc_row.id
@@ -65,3 +68,11 @@ class assigned_resource:
             conn.commit()
             
             return server_allocation_respons
+
+    def isInQueue(self, engine, name):
+        queue_row = None
+        with engine.connect() as conn:
+            queue_row = conn.execute(select(Queue).where(Queue.name == name)).first()
+            if(queue_row == None):
+                return False
+        return True
