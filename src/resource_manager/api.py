@@ -37,11 +37,15 @@ class Allocation(Resource):
             servers = args['servers']
             attributes = args['attributes']
 
-            cores = attributes['cores']
-            msize = attributes['msize']
-            ssize = attributes['ssize']
+            cores = msize = ssize = None
             targets = mountpoint = location = None
-
+            
+            try:
+                cores = attributes['cores']
+                msize = attributes['msize']
+                ssize = attributes['ssize']
+            except:
+                cores = msize = ssize = None
             try:
                 flavor = attributes['flavor']
             except:
