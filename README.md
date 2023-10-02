@@ -7,7 +7,7 @@ Python application for managing resources on the data servers of the IO-SEA proj
 The API documentation is located in the Docs folder - [Orchestrator_API.pdf](https://code.it4i.cz/io-sea/resource-manager/-/blob/main/Docs/Orchestrator_API.pdf?ref_type=heads)
 
 The database schema of RM.
-![DB Schema](https://code.it4i.cz/io-sea/resource-manager/-/raw/main/Docs/RM_DB_Tables.png?ref_type=heads)
+![DB Schema](Docs/RM_DB_Tables.png)
 
 ## Config files
 
