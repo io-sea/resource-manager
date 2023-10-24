@@ -21,8 +21,10 @@ class resource_manager:
             return
         connect_string = "mysql+pymysql://" + self.sett.getDicValue("db_user") + ":" + self.sett.getDicValue("db_password") + "@mysql/" + self.sett.getDicValue("db_schem")
         #connect_string = "mysql+pymysql://" + self.sett.getDicValue("db_user") + ":" + self.sett.getDicValue("db_password") + "@" + self.sett.getDicValue("db_adress") + "/" + self.sett.getDicValue("db_schem")
-        #self.engine = create_engine("mysql+pymysql://root:heslo@localhost/test")
+        
+        #self.engine = create_engine("mysql+pymysql://root:heslo@158.196.17.182/test", connect_args= dict(host='158.196.17.182', port=3307))
         self.engine = create_engine(connect_string)
+        
         makeTables(self.engine)
         
     def control(self):
