@@ -24,7 +24,7 @@ global sett
 resourceManager = resource_manager()
 sett = settings()
 
-@api.route('/v2.0.0/ephemeralservice/reserve')
+@api.route('/v2.1.0/ephemeralservice/reserve')
 class Allocation(Resource):  
     def post(self):
         name = None
@@ -37,15 +37,26 @@ class Allocation(Resource):
             servers = args['servers']
             attributes = args['attributes']
 
-            cores = msize = ssize = None
+            cores = msize = ssize = gssize = None
             targets = mountpoint = location = None
             
+
             try:
                 cores = attributes['cores']
+            except:
+                cores = None
+            try:
                 msize = attributes['msize']
+            except:
+                msize = None
+            try:
                 ssize = attributes['ssize']
             except:
-                cores = msize = ssize = None
+                ssize = None
+            try:
+                gssize = attributes['gssize']
+            except:
+                gssize = None
             try:
                 flavor = attributes['flavor']
             except:
@@ -85,8 +96,16 @@ class Allocation(Resource):
                 msize = flavor_property['msize']
                 ssize = flavor_property['ssize']
 
+            if(gssize != None):
+                try:
+                    ssize = gssize / servers
+                except:
+                    rm_logger.info('Allocation call - Error - gssize parser (%s)', name)
+                    return {'message': 'Error - gssize parser'}, 500
+
             rm_logger.info('Allocation call - Start (%s)\n       Req: name:%s  user:%s  es_type:%s  servers:%s  attributes:%s', name, name, user, es_type, str(servers), str(attributes))
             res = resourceManager.allocRequest(name, user, user_slurm_token, es_type, servers, cores, msize, ssize, targets, mountpoint, location)
+            
             if(res == -1):
                 rm_logger.info('Allocation call - Not enough space - added to Queue (%s)\n       Req: name:%s  user:%s  es_type:%s  servers:%s  attributes:%s', name, name, user, es_type, str(servers), str(attributes))
                 return {'message': 'Not enough space - added to Queue'}, 200
@@ -106,7 +125,7 @@ class Allocation(Resource):
             rm_logger.info('Allocation call - Error - Exp: %s (%s)', str(ex), name)
             return {'message': 'Error - AllocRequest'}, 500
 
-@api.route('/v2.0.0/server/allocation/<delete_name>')
+@api.route('/v2.1.0/server/allocation/<delete_name>')
 class Delete(Resource):
     def delete(self, delete_name):
         try:
@@ -124,7 +143,7 @@ class Delete(Resource):
             rm_logger.info('Delete call - Error - Exp: %s (%s)', str(ex), delete_name)
             return {'message': 'Error'}, 500
 
-@api.route('/v2.0.0/server/allocation/<service_name>')
+@api.route('/v2.1.0/server/allocation/<service_name>')
 class GetAllocation(Resource):
     def get(self, service_name):
         try:
@@ -146,7 +165,7 @@ class GetAllocation(Resource):
             rm_logger.info('GetAllocation call - Error - Exp: %s (%s)', str(ex), service_name)
             return {'message': 'Error'}, 502
 
-@api.route('/v2.0.0/server/resources/<server_name>')
+@api.route('/v2.1.0/server/resources/<server_name>')
 class GetServerResources(Resource):
     def get(self, server_name):
         try:
@@ -168,7 +187,29 @@ class GetServerResources(Resource):
             rm_logger.info('GetServerResources call - Error - Exp: %s (%s)', str(ex), server_name)
             return {'message': 'Error'}, 500
 
-@api.route('/v2.0.0/allocation/delete/all/yes')
+@api.route('/v2.1.0/allocation/get/queue_info')
+class GetQueue(Resource):
+    def get(self):
+        try:
+            res = resourceManager.getQueueInfo()
+            rm_logger.info('GetQueue call - Done')
+            return {'queue_info': res}, 200
+        except Exception as ex:
+            rm_logger.info('GetQueue call - Error - Exp: %s (%s)', str(ex))
+            return {'message': 'Error'}, 500
+
+@api.route('/v2.1.0/allocation/get/alloc_info')
+class GetAllocInfo(Resource):
+    def get(self):
+        try:
+            res = resourceManager.getAllocInfo()
+            rm_logger.info('GetAllocInfo call - Done')
+            return {'alloc_info': res}, 200
+        except Exception as ex:
+            rm_logger.info('GetAllocInfo call - Error - Exp: %s (%s)', str(ex))
+            return {'message': 'Error'}, 500
+
+@api.route('/v2.1.0/allocation/delete/all/yes')
 class Delete(Resource):
     def delete(self):
         try:
@@ -177,7 +218,7 @@ class Delete(Resource):
         except:
             return {'message': 'Error'}, 500
 
-@api.route('/v2.0.0/server/init_db')
+@api.route('/v2.1.0/server/init_db')
 class InitDB(Resource):
     def get(self):
         try:

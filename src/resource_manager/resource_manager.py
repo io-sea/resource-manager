@@ -1,6 +1,7 @@
 from tables import *
 from resource_allocation import resource_allocation
 from resource_deallocation import resource_deallocation
+from resource_info import resource_info
 from assigned_resource import assigned_resource
 from server_resource import server_resource
 from init_db import init_db
@@ -12,6 +13,7 @@ class resource_manager:
         print("RM created")
         self.res_alloc = resource_allocation()
         self.res_dealloc = resource_deallocation()
+        self.res_info = resource_info()
         self.assigned_resource = assigned_resource()
         self.server_resource = server_resource()
         self.init_db = init_db()
@@ -22,7 +24,7 @@ class resource_manager:
         connect_string = "mysql+pymysql://" + self.sett.getDicValue("db_user") + ":" + self.sett.getDicValue("db_password") + "@mysql/" + self.sett.getDicValue("db_schem")
         #connect_string = "mysql+pymysql://" + self.sett.getDicValue("db_user") + ":" + self.sett.getDicValue("db_password") + "@" + self.sett.getDicValue("db_adress") + "/" + self.sett.getDicValue("db_schem")
         
-        #self.engine = create_engine("mysql+pymysql://root:heslo@158.196.17.182/test", connect_args= dict(host='158.196.17.182', port=3307))
+        #self.engine = create_engine("mysql+pymysql://root:heslo@158.196.17.182/test", connect_args= dict(host='158.196.17.182', port=3306))
         self.engine = create_engine(connect_string)
         
         makeTables(self.engine)
@@ -78,4 +80,12 @@ class resource_manager:
             retSessions.append(str(x))
         return retSessions
 
+    def getQueueInfo(self):
+        print("getQueue:")
+        res = self.res_info.getQueueInfo(self.engine)
+        return res
     
+    def getAllocInfo(self):
+        print("getAllocInfo:")
+        res = self.res_info.getAllocInfo(self.engine)
+        return res
