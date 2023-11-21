@@ -48,7 +48,7 @@ class resource_allocation:
         free_space_actual = resource.free_space - size
         stmt = update(Resource).values(free_space=free_space_actual).where(Resource.id == resource_id)
         result = conn.execute(stmt)
-        if(is_core_type == True):
+        if(is_core_type == True and core_count > 0):
             free_cores = self.findFreeCores(conn, resource_id, core_count)
             self.allocated_Core_arr.append(free_cores)
             for free_core in free_cores:
