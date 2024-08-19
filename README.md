@@ -2,6 +2,9 @@
 
 Python application for managing resources on the data servers of the IO-SEA project. The project consists of two docker containers. The first one is the MySQL database and the second one contains the resource manager (RM) itself. SQL Alchemy and Flask-restx were used for RM development. An API interface is used to communicate with RM.
 
+## Acknowledgement
+This project has received funding from the European High-Performance Computing Joint Undertaking (JU) and from BMBF/DLR under grant agreement No 955811. The JU receives support from the European Union’s Horizon 2020 research and innovation programme and France, the Czech Republic, Germany, Ireland, Sweden and the United Kingdom.
+
 ## Documentation
 
 The API documentation is located in the Docs folder - [Orchestrator_API.pdf](https://code.it4i.cz/io-sea/resource-manager/-/blob/main/Docs/Orchestrator_API.pdf?ref_type=heads)
@@ -37,3 +40,5 @@ The project is ready to run via Docker. Type the command to run:
 ```
 docker-compose up
 ```
+
+
